@@ -15,7 +15,6 @@ let package = Package(
         ),
         .library(
             name: "LanguageModelChatUI",
-            type: .dynamic,
             targets: ["LanguageModelChatUI"]
         ),
     ],
