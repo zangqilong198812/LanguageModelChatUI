@@ -26,7 +26,12 @@ public final class MessageListView: UIView {
     private var isFirstLoad: Bool = true
     private let autoScrollTolerance: CGFloat = 2
 
-    var session: ConversationSession! {
+    /// The conversation this list draws.
+    ///
+    /// Public so a host can supply one it fills itself. Runline's transcript
+    /// arrives from a relay, and setting this is the whole of what it needs
+    /// from the renderer.
+    public var session: ConversationSession! {
         didSet {
             isFirstLoad = true
             alpha = 0
@@ -69,7 +74,13 @@ public final class MessageListView: UIView {
     private(set) lazy var markdownViewForSizeCalculation: MarkdownTextView = .init()
     private(set) lazy var markdownPackageCache: MarkdownPackageCache = .init()
 
-    init() {
+    /// Constructible from outside the package.
+    ///
+    /// Runline drives this list from a relay rather than from a
+    /// `ConversationSession` running inference, so it builds the view itself
+    /// instead of going through `ChatViewController` — which owns an input bar
+    /// and a session manager an app holding no model has no use for.
+    public init() {
         super.init(frame: .zero)
 
         listView.delegate = self

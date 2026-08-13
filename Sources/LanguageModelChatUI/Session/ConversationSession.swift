@@ -153,7 +153,12 @@ public final class ConversationSession: Identifiable, Sendable {
         messagesSubject.send((messages, scrolling))
     }
 
-    func refreshContentsFromDatabase(scrolling: Bool = true) {
+    /// Re-reads the conversation from its storage provider.
+    ///
+    /// Public so a host application can supply the messages itself. Runline's
+    /// transcript comes from a relay, and this is the seam that lets the
+    /// renderer be used without the inference machinery beneath it.
+    public func refreshContentsFromDatabase(scrolling: Bool = true) {
         messages.removeAll()
         messages = storageProvider.messages(in: id)
         notifyMessagesDidChange(scrolling: scrolling)
