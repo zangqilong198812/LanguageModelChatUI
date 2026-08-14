@@ -17,6 +17,7 @@ private extension MessageListView {
         case hint
         case toolCallHint
         case activityReporting
+        case progressCard
     }
 }
 
@@ -35,6 +36,7 @@ extension MessageListView: ListViewAdapter {
         case .hint: RowType.hint
         case .toolCallHint: RowType.toolCallHint
         case .activityReporting: RowType.activityReporting
+        case .progressCard: RowType.progressCard
         }
     }
 
@@ -56,6 +58,8 @@ extension MessageListView: ListViewAdapter {
             ToolHintView()
         case .activityReporting:
             ActivityReportingView()
+        case .progressCard:
+            ProgressCardView()
         }
         view.theme = theme
         return view
@@ -107,6 +111,12 @@ extension MessageListView: ListViewAdapter {
                 return max(textHeight, ActivityReportingView.loadingSymbolSize.height + 16)
             case .toolCallHint:
                 return theme.fonts.body.lineHeight + 20
+            case let .progressCard(_, block, steps):
+                return ProgressCardView.height(
+                    steps: steps.count,
+                    hasFooter: block.stepCount > ProgressCardView.window,
+                    isRunning: block.state == .running
+                )
             }
         }()
 
@@ -115,6 +125,13 @@ extension MessageListView: ListViewAdapter {
 
     public func listView(_: ListView, configureRowView rowView: ListRowView, for _: any Identifiable, at index: Int) {
         guard let entry = entryForRow(at: index) else { return }
+
+        if let card = rowView as? ProgressCardView {
+            if case let .progressCard(_, block, steps) = entry {
+                card.configure(block: block, steps: steps)
+            }
+            return
+        }
 
         if let userMessageView = rowView as? UserMessageView {
             if case let .userContent(_, message) = entry {

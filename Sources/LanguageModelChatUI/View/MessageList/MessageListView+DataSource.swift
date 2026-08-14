@@ -33,6 +33,8 @@ extension MessageListView {
         case hint(String, String)
         case toolCallHint(String, ToolCallContentPart)
         case activityReporting(String)
+        /// A coding agent's working block: one card for a turn's steps.
+        case progressCard(String, ProgressBlock, [ProgressStep])
 
         var id: String {
             switch self {
@@ -43,6 +45,7 @@ extension MessageListView {
             case let .hint(id, _): "hint-\(id)"
             case let .toolCallHint(id, _): "tool-\(id)"
             case let .activityReporting(msg): "activity-\(msg)"
+            case let .progressCard(id, _, _): "progress-\(id)"
             }
         }
     }
@@ -131,6 +134,13 @@ extension MessageListView {
                 }
 
             case .assistant:
+                // A working block is drawn whole. Emitting a row per tool call
+                // is what buries the reply under its own plumbing.
+                if let block = message.progress {
+                    entries.append(.progressCard(message.id, block, ProgressStep.steps(of: message)))
+                    continue
+                }
+
                 // Reasoning
                 if !reasoningContent.isEmpty {
                     let reasoningRep = MessageRepresentation(

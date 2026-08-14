@@ -14,6 +14,14 @@ public final class ConversationMessage: Identifiable, @unchecked Sendable {
     public var createdAt: Date
     public var metadata: [String: String]
 
+    /// Set when this message is a coding agent's working block rather than
+    /// prose: a turn's steps, rewritten in place as it works.
+    ///
+    /// The list draws one card for the whole block instead of a row per tool
+    /// call, because a turn can run a dozen tools and the reply must not be
+    /// pushed off the screen by its own plumbing.
+    public var progress: ProgressBlock?
+
     public init(
         id: String = UUID().uuidString,
         conversationID: String,
@@ -28,6 +36,25 @@ public final class ConversationMessage: Identifiable, @unchecked Sendable {
         self.parts = parts
         self.createdAt = createdAt
         self.metadata = metadata
+    }
+}
+
+/// A turn's working block: how far it got, and how much of it is being shown.
+public struct ProgressBlock: Hashable, Sendable {
+    public enum State: Hashable, Sendable {
+        case running, completed, failed
+    }
+
+    public var state: State
+    /// Steps in the whole block, including the ones the card is not showing.
+    public var stepCount: Int
+    /// The host dropped earlier steps before sending it.
+    public var truncated: Bool
+
+    public init(state: State, stepCount: Int, truncated: Bool = false) {
+        self.state = state
+        self.stepCount = stepCount
+        self.truncated = truncated
     }
 }
 
