@@ -31,10 +31,10 @@ final class AgentAvatarView: UIView {
             layer.addSublayer(shape)
         }
         chevron.strokeColor = UIColor.label.cgColor
-        chevron.lineWidth = 2
         // The one piece of colour in the mark: a prompt waiting for input.
-        underline.strokeColor = UIColor.tintColor.cgColor
-        underline.lineWidth = 2
+        // The design's blue, not the platform tint — the mark is the product's
+        // signature and should not change when a host recolours its controls.
+        underline.strokeColor = UIColor(red: 0x2E / 255, green: 0x9B / 255, blue: 0xF5 / 255, alpha: 1).cgColor
     }
 
     @available(*, unavailable)
@@ -42,27 +42,37 @@ final class AgentAvatarView: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        let box = bounds
-        chevron.frame = box
-        underline.frame = box
+        chevron.frame = bounds
+        underline.frame = bounds
 
-        let inset = box.width * 0.28
-        let mid = box.midY
+        // The design's own numbers: a 12pt glyph centred in a 22pt tile, its
+        // paths drawn in a 44-unit box — a chevron at (12,13)→(21,22)→(12,31)
+        // and a cursor line at (26,30)→(33,30). Scaled, not re-invented; the
+        // first version of this eyeballed the proportions and looked like a
+        // different mark.
+        let glyph = bounds.width * (12.0 / 22.0)
+        let unit = glyph / 44.0
+        let origin = CGPoint(x: (bounds.width - glyph) / 2, y: (bounds.height - glyph) / 2)
+        func at(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+            .init(x: origin.x + x * unit, y: origin.y + y * unit)
+        }
+
         let arrow = UIBezierPath()
-        arrow.move(to: .init(x: inset, y: mid - box.height * 0.16))
-        arrow.addLine(to: .init(x: box.width * 0.5, y: mid))
-        arrow.addLine(to: .init(x: inset, y: mid + box.height * 0.16))
+        arrow.move(to: at(12, 13))
+        arrow.addLine(to: at(21, 22))
+        arrow.addLine(to: at(12, 31))
         chevron.path = arrow.cgPath
+        chevron.lineWidth = 4.4 * unit
 
         let line = UIBezierPath()
-        line.move(to: .init(x: box.width * 0.58, y: mid + box.height * 0.16))
-        line.addLine(to: .init(x: box.width - inset * 0.7, y: mid + box.height * 0.16))
+        line.move(to: at(26, 30))
+        line.addLine(to: at(33, 30))
         underline.path = line.cgPath
+        underline.lineWidth = 4.4 * unit
     }
 
     override func traitCollectionDidChange(_ previous: UITraitCollection?) {
         super.traitCollectionDidChange(previous)
         chevron.strokeColor = UIColor.label.cgColor
-        underline.strokeColor = UIColor.tintColor.cgColor
     }
 }
