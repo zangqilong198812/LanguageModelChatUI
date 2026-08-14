@@ -103,7 +103,10 @@ extension MessageListView: ListViewAdapter {
                 markdownViewForSizeCalculation.theme = theme
                 let package = markdownPackageCache.package(for: message, theme: theme)
                 markdownViewForSizeCalculation.setMarkdownManually(package)
-                return ceil(markdownViewForSizeCalculation.boundingSize(for: containerWidth).height)
+                // Measured at the width the prose will actually get: the mark's
+                // column comes off the left, and a height taken at full width
+                // undercounts every message that wraps.
+                return ceil(markdownViewForSizeCalculation.boundingSize(for: containerWidth - AgentAvatarView.column).height)
             case .hint:
                 return ceil(theme.fonts.footnote.lineHeight + 16)
             case let .activityReporting(content):

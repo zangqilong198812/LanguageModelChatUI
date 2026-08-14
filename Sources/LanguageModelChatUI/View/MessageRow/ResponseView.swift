@@ -43,13 +43,20 @@ final class ResponseView: MessageListRowView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    private let avatar = AgentAvatarView()
+
     private func configureSubviews() {
+        contentView.addSubview(avatar)
         contentView.addSubview(markdownView)
     }
 
+    /// The mark stands beside the prose exactly as it stands beside a working
+    /// block: everything an agent says gets it, and a transcript where only
+    /// the tool cards carried it read as two different speakers.
     override func layoutSubviews() {
         super.layoutSubviews()
-        markdownView.frame = contentView.bounds
+        avatar.frame = .init(x: 0, y: 2, width: AgentAvatarView.size, height: AgentAvatarView.size)
+        markdownView.frame = contentView.bounds.inset(by: .init(top: 0, left: AgentAvatarView.column, bottom: 0, right: 0))
         markdownView.bindContentOffset(from: nearestScrollView)
     }
 }
