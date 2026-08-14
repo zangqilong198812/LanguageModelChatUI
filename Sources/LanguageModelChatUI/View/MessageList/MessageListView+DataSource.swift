@@ -39,6 +39,8 @@ extension MessageListView {
         case activityReporting(String)
         /// A coding agent's working block: one card for a turn's steps.
         case progressCard(String, ProgressBlock, [ProgressStep])
+        /// A question the agent asked and settled: one line of history.
+        case questionRecord(String, QuestionRecord)
 
         var id: String {
             switch self {
@@ -50,6 +52,7 @@ extension MessageListView {
             case let .toolCallHint(id, _): "tool-\(id)"
             case let .activityReporting(msg): "activity-\(msg)"
             case let .progressCard(id, _, _): "progress-\(id)"
+            case let .questionRecord(id, _): "question-\(id)"
             }
         }
     }
@@ -139,6 +142,13 @@ extension MessageListView {
                 }
 
             case .assistant:
+                // A settled question is its receipt, nothing more: the asking
+                // happened in a bar the list never drew.
+                if let record = message.question {
+                    entries.append(.questionRecord(message.id, record))
+                    continue
+                }
+
                 // A working block is drawn whole. Emitting a row per tool call
                 // is what buries the reply under its own plumbing.
                 if let block = message.progress {

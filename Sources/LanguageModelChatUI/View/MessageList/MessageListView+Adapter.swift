@@ -18,6 +18,7 @@ private extension MessageListView {
         case toolCallHint
         case activityReporting
         case progressCard
+        case questionRecord
     }
 }
 
@@ -37,6 +38,7 @@ extension MessageListView: ListViewAdapter {
         case .toolCallHint: RowType.toolCallHint
         case .activityReporting: RowType.activityReporting
         case .progressCard: RowType.progressCard
+        case .questionRecord: RowType.questionRecord
         }
     }
 
@@ -60,6 +62,8 @@ extension MessageListView: ListViewAdapter {
             ActivityReportingView()
         case .progressCard:
             ProgressCardView()
+        case .questionRecord:
+            QuestionRecordView()
         }
         view.theme = theme
         return view
@@ -122,6 +126,8 @@ extension MessageListView: ListViewAdapter {
                     hasFooter: block.stepCount > ProgressCardView.window,
                     isRunning: block.state == .running
                 )
+            case let .questionRecord(_, record):
+                return QuestionRecordView.height(for: record)
             }
         }()
 
@@ -134,6 +140,19 @@ extension MessageListView: ListViewAdapter {
         if let card = rowView as? ProgressCardView {
             if case let .progressCard(_, block, steps) = entry {
                 card.configure(block: block, steps: steps)
+            }
+            return
+        }
+
+        if let questionView = rowView as? QuestionRecordView {
+            if case let .questionRecord(id, record) = entry {
+                questionView.theme = theme
+                questionView.configure(record)
+                questionView.expandHandler = { [weak self] in
+                    guard let self, let message = session?.message(for: id) else { return }
+                    message.question?.isExpanded.toggle()
+                    session?.notifyMessagesDidChange(scrolling: false)
+                }
             }
             return
         }

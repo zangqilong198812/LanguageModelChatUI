@@ -1,6 +1,40 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "%lld steps": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld steps"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 步"
+          }
+        }
+      }
+    },
+    "Asked: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asked: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "问过：%@"
+          }
+        }
+      }
+    },
     "Attached %lld Documents": {
       "localizations": {
         "zh-Hans": {
@@ -11,22 +45,22 @@
         }
       }
     },
-    "Calculating context window...": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "正在计算上下文窗口..."
-          }
-        }
-      }
-    },
     "Audio": {
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
             "value": "音频"
+          }
+        }
+      }
+    },
+    "Calculating context window...": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在计算上下文窗口..."
           }
         }
       }
@@ -241,6 +275,23 @@
         }
       }
     },
+    "Note": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "说明"
+          }
+        }
+      }
+    },
     "OK": {
       "localizations": {
         "zh-Hans": {
@@ -257,6 +308,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "输出被截断。"
+          }
+        }
+      }
+    },
+    "PDF file is empty.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PDF 文件为空。"
           }
         }
       }
@@ -281,16 +342,6 @@
         }
       }
     },
-    "PDF file is empty.": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "PDF 文件为空。"
-          }
-        }
-      }
-    },
     "Photo": {
       "localizations": {
         "zh-Hans": {
@@ -307,6 +358,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "正在准备转写..."
+          }
+        }
+      }
+    },
+    "Result": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Result"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "结果"
+          }
+        }
+      }
+    },
+    "Show all": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show all"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部展开"
           }
         }
       }
@@ -361,6 +446,16 @@
         }
       }
     },
+    "Text Viewer": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文本查看器"
+          }
+        }
+      }
+    },
     "Text too long.": {
       "localizations": {
         "zh-Hans": {
@@ -371,12 +466,19 @@
         }
       }
     },
-    "Text Viewer": {
+    "Thinking": {
+      "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thinking"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "文本查看器"
+            "value": "思考"
           }
         }
       }
@@ -407,6 +509,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "已思考 %1$lld 秒"
+          }
+        }
+      }
+    },
+    "Tool": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tool"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工具"
           }
         }
       }
@@ -487,6 +606,40 @@
         }
       }
     },
+    "Turn complete": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn complete"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这一回合完成"
+          }
+        }
+      }
+    },
+    "Turn failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn failed"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这一回合失败"
+          }
+        }
+      }
+    },
     "Type something...": {
       "localizations": {
         "zh-Hans": {
@@ -544,138 +697,19 @@
         }
       }
     },
-    "Turn complete": {
+    "You chose": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Turn complete"
+            "value": "You chose"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "这一回合完成"
-          }
-        }
-      }
-    },
-    "Turn failed": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Turn failed"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "这一回合失败"
-          }
-        }
-      }
-    },
-    "Show all": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show all"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "全部展开"
-          }
-        }
-      }
-    },
-    "Thinking": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Thinking"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "思考"
-          }
-        }
-      }
-    },
-    "Tool": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tool"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "工具"
-          }
-        }
-      }
-    },
-    "Result": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Result"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "结果"
-          }
-        }
-      }
-    },
-    "Note": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Note"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "说明"
-          }
-        }
-      }
-    },
-    "%lld steps": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld steps"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld 步"
+            "value": "你选了"
           }
         }
       }

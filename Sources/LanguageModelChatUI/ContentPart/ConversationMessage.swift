@@ -22,6 +22,14 @@ public final class ConversationMessage: Identifiable, @unchecked Sendable {
     /// pushed off the screen by its own plumbing.
     public var progress: ProgressBlock?
 
+    /// Set when this message records a question the agent asked and settled.
+    ///
+    /// While a question is open it is a bar the user acts on, not a row — the
+    /// list renders rows that cannot be tapped. What lands here afterwards is
+    /// the receipt: one line of history, expandable to the options that were
+    /// offered at the time.
+    public var question: QuestionRecord?
+
     public init(
         id: String = UUID().uuidString,
         conversationID: String,
@@ -55,6 +63,48 @@ public struct ProgressBlock: Hashable, Sendable {
         self.state = state
         self.stepCount = stepCount
         self.truncated = truncated
+    }
+}
+
+/// A question the agent asked, kept after it was answered.
+///
+/// The prompt and the options are the host's, shown as given. The answer is
+/// whichever option label was chosen — free-text answers travel as ordinary
+/// user messages and never produce one of these.
+public struct QuestionRecord: Hashable, Sendable {
+    public struct Option: Hashable, Sendable {
+        public var label: String
+        public var detail: String?
+
+        public init(label: String, detail: String? = nil) {
+            self.label = label
+            self.detail = detail
+        }
+    }
+
+    public var prompt: String
+    /// The chosen option's label, if this phone knows it. A question can be
+    /// settled elsewhere, and a record must not invent the answer it missed.
+    public var answer: String?
+    public var answeredAt: Date?
+    public var options: [Option]
+    /// Whether the row is showing the options it collapsed. Carried on the
+    /// record rather than in the view: rows are reused, and state left in a
+    /// view surfaces on whichever message is dealt that view next.
+    public var isExpanded: Bool
+
+    public init(
+        prompt: String,
+        answer: String? = nil,
+        answeredAt: Date? = nil,
+        options: [Option] = [],
+        isExpanded: Bool = false
+    ) {
+        self.prompt = prompt
+        self.answer = answer
+        self.answeredAt = answeredAt
+        self.options = options
+        self.isExpanded = isExpanded
     }
 }
 
