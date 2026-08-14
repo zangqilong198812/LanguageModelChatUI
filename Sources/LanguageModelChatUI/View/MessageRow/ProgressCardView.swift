@@ -6,6 +6,17 @@
 import MarkdownView
 import UIKit
 
+/// The working card's outcome and thinking colours, system by default.
+///
+/// A host with its own palette sets these once at startup; the theme has no
+/// slot for them and the tint is already taken by "running".
+@MainActor
+public enum ProgressAccents {
+    public static var success: UIColor = .systemGreen
+    public static var failure: UIColor = .systemRed
+    public static var thinking: UIColor = .systemPurple
+}
+
 /// A coding agent's working block, drawn as one card.
 ///
 /// Its height is fixed. A turn can run sixteen tools and the message must not
@@ -49,6 +60,10 @@ final class ProgressCardView: MessageListRowView {
     /// The host app's tint. The theme carries text colours only, and a card
     /// that hard-coded a blue would fight whatever the app is set in.
     static var accentColor: UIColor { .tintColor }
+
+    static var successColor: UIColor { ProgressAccents.success }
+    static var failureColor: UIColor { ProgressAccents.failure }
+    static var thinkingColor: UIColor { ProgressAccents.thinking }
 
     private var stepViews: [ProgressStepView] = []
     private var block: ProgressBlock?
@@ -118,14 +133,14 @@ final class ProgressCardView: MessageListRowView {
             contentView.layer.borderColor = Self.accentColor.withAlphaComponent(0.22).cgColor
         case .completed:
             titleLabel.text = String.localized("Turn complete")
-            titleLabel.textColor = .systemGreen
+            titleLabel.textColor = Self.successColor
             statusDot.isHidden = true
             contentView.layer.borderColor = UIColor.separator.cgColor
         case .failed:
             titleLabel.text = String.localized("Turn failed")
-            titleLabel.textColor = .systemRed
+            titleLabel.textColor = Self.failureColor
             statusDot.isHidden = true
-            contentView.layer.borderColor = UIColor.systemRed.withAlphaComponent(0.3).cgColor
+            contentView.layer.borderColor = Self.failureColor.withAlphaComponent(0.3).cgColor
         }
 
         contentView.backgroundColor = block.state == .running
@@ -254,9 +269,9 @@ final class ProgressStepView: UIView {
         textLabel.font = theme.fonts.body.withSize(13)
         kindLabel.text = step.kind.label
         kindLabel.textColor = switch step.kind {
-        case .thinking: UIColor.systemPurple
+        case .thinking: ProgressCardView.thinkingColor
         case .tool: ProgressCardView.accentColor
-        case .result: step.failed ? .systemRed : .systemGreen
+        case .result: step.failed ? ProgressCardView.failureColor : ProgressCardView.successColor
         case .note: .secondaryLabel
         }
         textLabel.text = step.text
