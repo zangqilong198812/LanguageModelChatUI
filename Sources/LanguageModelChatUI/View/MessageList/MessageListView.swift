@@ -60,7 +60,12 @@ public final class MessageListView: UIView {
     private var sessionScopedCancellables: Set<AnyCancellable> = .init()
     let loadingState = CurrentValueSubject<String?, Never>(nil)
 
-    var contentSafeAreaInsets: UIEdgeInsets = .zero {
+    /// Where the content may not go: under a navigation bar, under a composer.
+    ///
+    /// Public because a host that embeds the list without the shipped
+    /// container has to say this itself — with it at zero the last row sits
+    /// half under whatever the app lays over the bottom.
+    public var contentSafeAreaInsets: UIEdgeInsets = .zero {
         didSet { setNeedsLayout() }
     }
 
