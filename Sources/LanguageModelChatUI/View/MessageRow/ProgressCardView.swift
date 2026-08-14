@@ -21,7 +21,7 @@ final class ProgressCardView: MessageListRowView {
     private static let footerHeight: CGFloat = 26
     private static let sweepHeight: CGFloat = 2
     private static let padding: CGFloat = 10
-    private static let gutterWidth: CGFloat = 30
+    private static let gutterWidth: CGFloat = 34
 
     /// The card's height for a block, known without laying anything out: the
     /// window is what makes it a constant rather than a measurement.
@@ -131,7 +131,7 @@ final class ProgressCardView: MessageListRowView {
         contentView.backgroundColor = block.state == .running
             ? Self.accentColor.withAlphaComponent(0.03)
             : .clear
-        countLabel.text = "\(block.stepCount)"
+        countLabel.text = String(format: String.localized("%lld steps"), block.stepCount)
         sweepTrack.isHidden = block.state != .running
         if block.state == .running { startSweeping() }
 
@@ -189,8 +189,8 @@ final class ProgressCardView: MessageListRowView {
         header.frame = .init(x: 0, y: 0, width: width, height: Self.headerHeight)
         statusDot.frame = .init(x: 12, y: (Self.headerHeight - 7) / 2, width: 7, height: 7)
         let titleX: CGFloat = statusDot.isHidden ? 12 : 27
-        titleLabel.frame = .init(x: titleX, y: 0, width: width - titleX - 60, height: Self.headerHeight)
-        countLabel.frame = .init(x: width - 52, y: 0, width: 40, height: Self.headerHeight)
+        titleLabel.frame = .init(x: titleX, y: 0, width: width - titleX - 84, height: Self.headerHeight)
+        countLabel.frame = .init(x: width - 76, y: 0, width: 64, height: Self.headerHeight)
         countLabel.textAlignment = .right
 
         var y = Self.headerHeight + Self.padding
@@ -280,9 +280,9 @@ final class ProgressStepView: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        kindLabel.frame = .init(x: 0, y: 0, width: 30, height: bounds.height)
-        let textWidth = bounds.width - 38 - (caret.isHidden ? 0 : 12)
-        textLabel.frame = .init(x: 38, y: 0, width: max(0, textWidth), height: bounds.height)
-        caret.frame = .init(x: 38 + textLabel.intrinsicContentSize.width + 4, y: 3, width: 6, height: 12)
+        kindLabel.frame = .init(x: 0, y: 0, width: 34, height: bounds.height)
+        let textWidth = bounds.width - 42 - (caret.isHidden ? 0 : 12)
+        textLabel.frame = .init(x: 42, y: 0, width: max(0, textWidth), height: bounds.height)
+        caret.frame = .init(x: 42 + textLabel.intrinsicContentSize.width + 4, y: 3, width: 6, height: 12)
     }
 }
