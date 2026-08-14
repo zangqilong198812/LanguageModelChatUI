@@ -16,6 +16,18 @@ extension MessageListView {
         private let lock = NSLock()
         private let parser = MarkdownParser()
 
+        /// Everything here was attributed with a theme that is no longer the
+        /// one in force. The sizes are baked into the packages at build time,
+        /// so a reload that reads the cache back changes nothing at all —
+        /// which is how a host that set its own typeface kept seeing the
+        /// default one.
+        func invalidate() {
+            lock.lock()
+            cachedPackages.removeAll()
+            cachedHashes.removeAll()
+            lock.unlock()
+        }
+
         func package(
             for messageRepresentation: MessageRepresentation,
             theme: MarkdownTheme

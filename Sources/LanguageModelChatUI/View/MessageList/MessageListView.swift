@@ -78,7 +78,13 @@ public final class MessageListView: UIView {
     /// and not the file — the package bundling a second copy of a typeface the
     /// app already ships would be pure weight.
     public var theme: MarkdownTheme = .default {
-        didSet { listView.reloadData() }
+        didSet {
+            // The cache holds content attributed with the old theme, and its
+            // key does not know a theme exists — reloading without dropping it
+            // reads the old sizes straight back.
+            markdownPackageCache.invalidate()
+            listView.reloadData()
+        }
     }
 
     private(set) lazy var labelForSizeCalculation: LTXLabel = .init()
