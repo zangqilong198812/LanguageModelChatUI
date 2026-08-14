@@ -179,8 +179,14 @@ public final class MessageListView: UIView {
 
         let shouldScrolling = scrolling && isAutoScrollingToBottom
 
+        // A list filling for the first time is a first load, whoever asked
+        // first. A host reloads once before its messages have arrived, and
+        // that empty pass used to consume this path — so the real content came
+        // second and rode in on the animated one, scrolling visibly to the
+        // bottom of a screen the reader had only just opened.
+        let isFilling = entryCount == 0 && !entries.isEmpty
         entryCount = entries.count
-        if isFirstLoad || alpha == 0 {
+        if isFirstLoad || isFilling || alpha == 0 {
             isFirstLoad = false
             dataSource.applySnapshot(using: entries, animatingDifferences: false)
             listView.setContentOffset(.init(x: 0, y: listView.maximumContentOffset.y), animated: false)
