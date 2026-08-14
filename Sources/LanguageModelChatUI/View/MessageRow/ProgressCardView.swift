@@ -44,6 +44,7 @@ final class ProgressCardView: MessageListRowView {
     private let sweep = UIView()
     private let sweepTrack = UIView()
     private let gradientMask = CAGradientLayer()
+    private let avatar = AgentAvatarView()
 
     /// The host app's tint. The theme carries text colours only, and a card
     /// that hard-coded a blue would fight whatever the app is set in.
@@ -76,6 +77,7 @@ final class ProgressCardView: MessageListRowView {
         footer.addSubview(expandLabel)
         sweepTrack.addSubview(sweep)
 
+        addSubview(avatar)
         contentView.addSubview(header)
         contentView.addSubview(stepsContainer)
         contentView.addSubview(footer)
@@ -170,6 +172,18 @@ final class ProgressCardView: MessageListRowView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
+        // The card sits in the agent's column, with the mark beside its head.
+        avatar.frame = .init(
+            x: MessageListView.listRowInsets.left,
+            y: 2,
+            width: AgentAvatarView.size,
+            height: AgentAvatarView.size
+        )
+        var box = contentView.frame
+        box.origin.x = MessageListView.listRowInsets.left + AgentAvatarView.column
+        box.size.width = bounds.width - box.origin.x - MessageListView.listRowInsets.right
+        contentView.frame = box
+
         let width = contentView.bounds.width
 
         header.frame = .init(x: 0, y: 0, width: width, height: Self.headerHeight)
