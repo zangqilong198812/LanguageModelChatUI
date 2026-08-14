@@ -53,6 +53,10 @@ let package = Package(
             resources: [.process("Resources")]
         ),
         .testTarget(
+            name: "LanguageModelChatUITests",
+            dependencies: ["LanguageModelChatUI"]
+        ),
+        .testTarget(
             name: "ChatClientKitTests",
             dependencies: ["ChatClientKit"]
         ),

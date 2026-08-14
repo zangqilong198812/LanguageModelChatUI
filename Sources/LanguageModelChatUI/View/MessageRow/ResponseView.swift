@@ -27,6 +27,17 @@ final class ResponseView: MessageListRowView {
         configureSubviews()
     }
 
+    /// The hand-off that decides what the prose is drawn in: the render reads
+    /// the text view's own theme (TextBuilder.build takes `view.theme`), so a
+    /// row that never passes it draws at the default sizes while its height
+    /// was measured at the themed ones.
+    override func themeDidUpdate() {
+        super.themeDidUpdate()
+        if markdownView.theme != theme {
+            markdownView.theme = theme
+        }
+    }
+
     @available(*, unavailable)
     @MainActor required init?(coder _: NSCoder) {
         fatalError("init(coder:) has not been implemented")

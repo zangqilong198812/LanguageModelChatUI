@@ -12,6 +12,11 @@ import UIKit
 class MessageListRowView: ListRowView, UIContextMenuInteractionDelegate {
     var theme: MarkdownTheme = .default {
         didSet {
+            // Only when it actually changed. The adapter assigns this on every
+            // configure, and a row that re-renders on each assignment feeds its
+            // stale document back into the throttled pipeline — racing the real
+            // content for the same window, and sometimes winning forever.
+            guard oldValue != theme else { return }
             themeDidUpdate()
             setNeedsLayout()
         }
