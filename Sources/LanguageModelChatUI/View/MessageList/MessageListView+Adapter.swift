@@ -81,7 +81,9 @@ extension MessageListView: ListViewAdapter {
                     .foregroundColor: theme.colors.body,
                 ])
                 let availableWidth = UserMessageView.availableTextWidth(for: containerWidth)
-                return boundingSize(with: availableWidth, for: attributedContent).height + UserMessageView.textPadding * 2
+                return boundingSize(with: availableWidth, for: attributedContent).height
+                    + UserMessageView.verticalTextPadding * 2
+                    + (message.footnote == nil ? 0 : UserMessageView.footnoteHeight)
             case .userAttachment:
                 return AttachmentsBar.itemHeight
             case let .reasoningContent(_, message):
@@ -137,6 +139,7 @@ extension MessageListView: ListViewAdapter {
             if case let .userContent(_, message) = entry {
                 userMessageView.theme = theme
                 userMessageView.text = message.content
+                userMessageView.footnote = message.footnote
             }
         } else if let userAttachmentView = rowView as? UserAttachmentView {
             if case let .userAttachment(_, attachments) = entry {

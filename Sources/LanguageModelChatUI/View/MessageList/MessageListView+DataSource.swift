@@ -18,6 +18,10 @@ extension MessageListView {
         var isRevealed: Bool
         var isThinking: Bool
         var thinkingDuration: TimeInterval
+        /// A line under the bubble — who said it, when, whether it landed.
+        /// Read from the message's metadata, because only the app that put a
+        /// message there knows whether it arrived.
+        var footnote: String?
     }
 
     struct Attachments: Hashable {
@@ -92,7 +96,8 @@ extension MessageListView {
                 content: textContent,
                 isRevealed: !reasoningCollapsed,
                 isThinking: isThinking,
-                thinkingDuration: reasoningDuration
+                thinkingDuration: reasoningDuration,
+                        footnote: message.metadata["footnote"]
             )
 
             switch message.role {
@@ -150,7 +155,8 @@ extension MessageListView {
                         content: reasoningContent,
                         isRevealed: !reasoningCollapsed,
                         isThinking: isThinking,
-                        thinkingDuration: reasoningDuration
+                        thinkingDuration: reasoningDuration,
+                        footnote: message.metadata["footnote"]
                     )
                     entries.append(.reasoningContent(message.id, reasoningRep))
                 }
