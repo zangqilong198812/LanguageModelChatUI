@@ -27,6 +27,18 @@ final class ResponseView: MessageListRowView {
         configureSubviews()
     }
 
+    /// The one hand-off that decides what the prose is drawn in.
+    ///
+    /// The preprocessed package carries the parse; the *render* reads the text
+    /// view's own theme (TextBuilder.build takes `view.theme`). Nothing ever
+    /// set it, so every response drew at the default sizes while its height
+    /// was measured at the themed ones — the clipped cards and the dead space
+    /// were the same bug as the wrong font.
+    override func themeDidUpdate() {
+        super.themeDidUpdate()
+        markdownView.theme = theme
+    }
+
     @available(*, unavailable)
     @MainActor required init?(coder _: NSCoder) {
         fatalError("init(coder:) has not been implemented")
