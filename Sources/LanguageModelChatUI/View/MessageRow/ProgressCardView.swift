@@ -3,6 +3,7 @@
 //  LanguageModelChatUI
 //
 
+import MarkdownView
 import UIKit
 
 /// A coding agent's working block, drawn as one card.
@@ -65,12 +66,8 @@ final class ProgressCardView: MessageListRowView {
         contentView.clipsToBounds = true
 
         statusDot.layer.cornerRadius = 3.5
-        titleLabel.font = .systemFont(ofSize: 13, weight: .bold)
-        countLabel.font = .monospacedSystemFont(ofSize: 10, weight: .regular)
         countLabel.textColor = .tertiaryLabel
-        hiddenLabel.font = .monospacedSystemFont(ofSize: 10, weight: .regular)
         hiddenLabel.textColor = .secondaryLabel
-        expandLabel.font = .systemFont(ofSize: 11.5)
 
         header.addSubview(statusDot)
         header.addSubview(titleLabel)
@@ -102,6 +99,13 @@ final class ProgressCardView: MessageListRowView {
     func configure(block: ProgressBlock, steps: [ProgressStep]) {
         self.block = block
         self.steps = steps
+
+        // Sizes are the card's, family is the app's: the theme carries the
+        // typeface and this decides how big each part of the card is in it.
+        titleLabel.font = theme.fonts.bold.withSize(13)
+        expandLabel.font = theme.fonts.body.withSize(11.5)
+        countLabel.font = theme.fonts.codeInline.withSize(10)
+        hiddenLabel.font = theme.fonts.codeInline.withSize(10)
 
         switch block.state {
         case .running:
@@ -148,7 +152,7 @@ final class ProgressCardView: MessageListRowView {
             guard index < shown.count else { continue }
             view.configure(
                 shown[index],
-                bodyColor: theme.colors.body,
+                theme: theme,
                 showsCaret: block.state == .running && index == shown.count - 1
             )
         }
@@ -220,8 +224,6 @@ final class ProgressStepView: UIView {
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-        kindLabel.font = .monospacedSystemFont(ofSize: 10, weight: .regular)
-        textLabel.font = .systemFont(ofSize: 13)
         textLabel.lineBreakMode = .byTruncatingTail
         textLabel.numberOfLines = 1
         caret.layer.cornerRadius = 1
@@ -233,7 +235,9 @@ final class ProgressStepView: UIView {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError() }
 
-    func configure(_ step: ProgressStep, bodyColor: UIColor, showsCaret: Bool) {
+    func configure(_ step: ProgressStep, theme: MarkdownTheme, showsCaret: Bool) {
+        kindLabel.font = theme.fonts.codeInline.withSize(10)
+        textLabel.font = theme.fonts.body.withSize(13)
         kindLabel.text = step.kind.label
         kindLabel.textColor = switch step.kind {
         case .thinking: UIColor.systemPurple
@@ -242,9 +246,9 @@ final class ProgressStepView: UIView {
         case .note: .secondaryLabel
         }
         textLabel.text = step.text
-        textLabel.textColor = bodyColor
+        textLabel.textColor = theme.colors.body
         caret.isHidden = !showsCaret
-        caret.backgroundColor = bodyColor
+        caret.backgroundColor = theme.colors.body
         if showsCaret { startBlinking() } else { caret.layer.removeAllAnimations() }
         setNeedsLayout()
     }

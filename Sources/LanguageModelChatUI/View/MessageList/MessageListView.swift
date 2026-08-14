@@ -66,7 +66,13 @@ public final class MessageListView: UIView {
 
     static let listRowInsets: UIEdgeInsets = .init(top: 0, left: 20, bottom: 16, right: 20)
 
-    var theme: MarkdownTheme = .default {
+    /// The typeface and colours everything in the list is drawn in.
+    ///
+    /// Public so a host app can hand over its own. A font registered by the
+    /// app is registered for the whole process, so this needs the font object
+    /// and not the file — the package bundling a second copy of a typeface the
+    /// app already ships would be pure weight.
+    public var theme: MarkdownTheme = .default {
         didSet { listView.reloadData() }
     }
 
