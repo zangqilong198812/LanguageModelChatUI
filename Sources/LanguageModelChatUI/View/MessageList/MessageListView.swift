@@ -151,11 +151,14 @@ public final class MessageListView: UIView {
         return abs(listView.contentOffset.y - listView.maximumContentOffset.y) <= tolerance
     }
 
-    func loading(with message: String = .init()) {
+    /// Public for hosts that drive the wait from their own state: Runline's
+    /// transcript shows "thinking" as a trailing row of this list rather than
+    /// an overlay floating above it.
+    public func loading(with message: String = .init()) {
         loadingState.send(message)
     }
 
-    func stopLoading() {
+    public func stopLoading() {
         loadingState.send(nil)
     }
 
