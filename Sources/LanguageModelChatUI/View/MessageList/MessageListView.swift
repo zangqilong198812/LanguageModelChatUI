@@ -198,7 +198,14 @@ public final class MessageListView: UIView {
                 UIView.animate(withDuration: 0.25) { self.alpha = 1 }
             }
         } else {
-            dataSource.applySnapshot(using: entries, animatingDifferences: true)
+            // Never animated. ListViewKit's animated apply forces a layout in
+            // its completion using the *previous* layout cache's row indices;
+            // a snapshot that shrank in the meantime — the thinking row
+            // retiring as the reply lands — makes that lookup run off the end
+            // of the new data source and trip its assertion. The row-level
+            // reconfigure already carries streaming updates without animation,
+            // so the insert animation is all this ever bought.
+            dataSource.applySnapshot(using: entries, animatingDifferences: false)
             if shouldScrolling {
                 listView.scroll(to: listView.maximumContentOffset)
             }
