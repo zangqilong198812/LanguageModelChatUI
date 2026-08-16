@@ -162,6 +162,14 @@ public final class MessageListView: UIView {
         loadingState.send(nil)
     }
 
+    /// For the host's own sends: a message the user just wrote must be seen
+    /// leaving, wherever the list happened to be scrolled. Re-arms the
+    /// bottom-following the reader may have broken by scrolling up.
+    public func scrollToBottom(animated: Bool = true) {
+        isAutoScrollingToBottom = true
+        listView.setContentOffset(.init(x: 0, y: listView.maximumContentOffset.y), animated: animated)
+    }
+
     func updateList() {
         let entries = entries(from: session.messages)
         dataSource.applySnapshot(using: entries, animatingDifferences: false)
