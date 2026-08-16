@@ -167,7 +167,15 @@ public final class MessageListView: UIView {
     /// bottom-following the reader may have broken by scrolling up.
     public func scrollToBottom(animated: Bool = true) {
         isAutoScrollingToBottom = true
-        listView.setContentOffset(.init(x: 0, y: listView.maximumContentOffset.y), animated: animated)
+        // ListScrollView drives its own display-link animation and *asserts*
+        // on `setContentOffset(_:animated: true)` — the UIKit-animated path
+        // crashed debug builds the moment a send scrolled the list. Animated
+        // means its spring, not UIKit's.
+        if animated {
+            listView.scroll(to: .init(x: 0, y: listView.maximumContentOffset.y))
+        } else {
+            listView.setContentOffset(.init(x: 0, y: listView.maximumContentOffset.y), animated: false)
+        }
     }
 
     func updateList() {
