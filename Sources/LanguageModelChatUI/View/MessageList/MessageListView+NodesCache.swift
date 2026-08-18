@@ -12,7 +12,13 @@ import MarkdownView
 extension MessageListView {
     class MarkdownPackageCache {
         private var cachedPackages: [String: MarkdownTextView.PreprocessedContent] = [:]
-        private var cachedHashes: [String: Int] = [:]
+        /// The message's content version the cached package was built for.
+        ///
+        /// Keyed on the version rather than on a hash of the text: hashing
+        /// every row's content to look the cache up would cost exactly what
+        /// the cache exists to save, and the version is bumped on every
+        /// content change by the same guarantee the diff relies on.
+        private var cachedVersions: [String: Int] = [:]
         private let lock = NSLock()
         private let parser = MarkdownParser()
 
@@ -24,7 +30,7 @@ extension MessageListView {
         func invalidate() {
             lock.lock()
             cachedPackages.removeAll()
-            cachedHashes.removeAll()
+            cachedVersions.removeAll()
             lock.unlock()
         }
 
@@ -33,10 +39,10 @@ extension MessageListView {
             theme: MarkdownTheme
         ) -> MarkdownTextView.PreprocessedContent {
             let id = messageRepresentation.id
-            let contentHash = messageRepresentation.content.hashValue
+            let version = messageRepresentation.contentVersion
 
             lock.lock()
-            if let cached = cachedPackages[id], cachedHashes[id] == contentHash {
+            if let cached = cachedPackages[id], cachedVersions[id] == version {
                 lock.unlock()
                 return cached
             }
@@ -46,7 +52,7 @@ extension MessageListView {
 
             lock.lock()
             cachedPackages[id] = content
-            cachedHashes[id] = contentHash
+            cachedVersions[id] = version
             lock.unlock()
 
             return content

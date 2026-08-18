@@ -10,6 +10,14 @@ import MarkdownView
 
 extension MessageListView {
     /// A lightweight representation of a message for display purposes.
+    ///
+    /// Equality deliberately excludes `content`. A turn's block is rewritten
+    /// many times a second, and the diff hashes every entry on every rewrite
+    /// — hashing the whole text of every message per frame is the cost this
+    /// type exists to avoid. `contentVersion` is the change signal instead:
+    /// whoever rewrites a message's content bumps it (see
+    /// `ConversationMessage.markContentChanged`), so two entries with the same
+    /// version and flags necessarily draw the same content.
     struct MessageRepresentation: Hashable {
         let id: String
         let createdAt: Date
@@ -18,10 +26,35 @@ extension MessageListView {
         var isRevealed: Bool
         var isThinking: Bool
         var thinkingDuration: TimeInterval
+        /// The owning message's rewrite counter; changes whenever its content
+        /// does.
+        var contentVersion: Int
         /// A line under the bubble — who said it, when, whether it landed.
         /// Read from the message's metadata, because only the app that put a
         /// message there knows whether it arrived.
         var footnote: String?
+
+        static func == (lhs: MessageRepresentation, rhs: MessageRepresentation) -> Bool {
+            lhs.id == rhs.id
+                && lhs.createdAt == rhs.createdAt
+                && lhs.role == rhs.role
+                && lhs.isRevealed == rhs.isRevealed
+                && lhs.isThinking == rhs.isThinking
+                && lhs.thinkingDuration == rhs.thinkingDuration
+                && lhs.contentVersion == rhs.contentVersion
+                && lhs.footnote == rhs.footnote
+        }
+
+        func hash(into hasher: inout Hasher) {
+            hasher.combine(id)
+            hasher.combine(createdAt)
+            hasher.combine(role)
+            hasher.combine(isRevealed)
+            hasher.combine(isThinking)
+            hasher.combine(thinkingDuration)
+            hasher.combine(contentVersion)
+            hasher.combine(footnote)
+        }
     }
 
     struct Attachments: Hashable {
@@ -37,8 +70,14 @@ extension MessageListView {
         case hint(String, String)
         case toolCallHint(String, ToolCallContentPart)
         case activityReporting(String)
-        /// A coding agent's working block: one card for a turn's steps.
-        case progressCard(String, ProgressBlock, [ProgressStep])
+        /// A coding agent's working block: one card for a turn's steps. The
+        /// flag rides in the entry (not just the message) so toggling it
+        /// changes the row's identity and the list reconfigures it. The
+        /// message's content version rides along for the same reason — a
+        /// running block's step text changes without the steps' identity
+        /// changing (their equality ignores text), and the version is what
+        /// tells the diff the card must be redrawn.
+        case progressCard(String, ProgressBlock, [ProgressStep], Bool, Int)
         /// A question the agent asked and settled: one line of history.
         case questionRecord(String, QuestionRecord)
 
@@ -51,22 +90,34 @@ extension MessageListView {
             case let .hint(id, _): "hint-\(id)"
             case let .toolCallHint(id, _): "tool-\(id)"
             case let .activityReporting(msg): "activity-\(msg)"
-            case let .progressCard(id, _, _): "progress-\(id)"
+            case let .progressCard(id, _, _, _, _): "progress-\(id)"
             case let .questionRecord(id, _): "question-\(id)"
             }
         }
     }
+
+    /// One formatter pair per process, not per snapshot: a streamed turn
+    /// derives every row of the list many times a second, and a DateFormatter
+    /// is expensive to construct.
+    private static let hintFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm"
+        return formatter
+    }()
+
+    private static let dayKeyFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }()
 
     /// Convert conversation messages to displayable entries.
     func entries(from messages: [ConversationMessage]) -> [Entry] {
         var entries: [Entry] = []
         var latestDisplayedDay: Date?
 
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm"
-
-        let dayKeyFormatter = DateFormatter()
-        dayKeyFormatter.dateFormat = "yyyy-MM-dd"
+        let dateFormatter = Self.hintFormatter
+        let dayKeyFormatter = Self.dayKeyFormatter
 
         func checkAddDateHint(_ date: Date) {
             if let latestDisplayedDay, Calendar.current.isDate(date, inSameDayAs: latestDisplayedDay) { return }
@@ -100,6 +151,7 @@ extension MessageListView {
                 isRevealed: !reasoningCollapsed,
                 isThinking: isThinking,
                 thinkingDuration: reasoningDuration,
+                contentVersion: message.contentVersion,
                         footnote: message.metadata["footnote"]
             )
 
@@ -152,7 +204,13 @@ extension MessageListView {
                 // A working block is drawn whole. Emitting a row per tool call
                 // is what buries the reply under its own plumbing.
                 if let block = message.progress {
-                    entries.append(.progressCard(message.id, block, ProgressStep.steps(of: message)))
+                    entries.append(.progressCard(
+                        message.id,
+                        block,
+                        ProgressStep.steps(of: message),
+                        message.isProgressExpanded,
+                        message.contentVersion
+                    ))
                     continue
                 }
 
@@ -166,6 +224,7 @@ extension MessageListView {
                         isRevealed: !reasoningCollapsed,
                         isThinking: isThinking,
                         thinkingDuration: reasoningDuration,
+                        contentVersion: message.contentVersion,
                         footnote: message.metadata["footnote"]
                     )
                     entries.append(.reasoningContent(message.id, reasoningRep))
@@ -203,12 +262,13 @@ extension MessageListView {
 
 extension ToolCallContentPart: Hashable {
     public static func == (lhs: ToolCallContentPart, rhs: ToolCallContentPart) -> Bool {
-        lhs.id == rhs.id && lhs.state == rhs.state
+        lhs.id == rhs.id && lhs.state == rhs.state && lhs.isExpanded == rhs.isExpanded
     }
 
     public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
         hasher.combine(state)
+        hasher.combine(isExpanded)
     }
 }
 

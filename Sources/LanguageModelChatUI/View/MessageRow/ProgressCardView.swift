@@ -35,9 +35,10 @@ final class ProgressCardView: MessageListRowView {
     private static let gutterWidth: CGFloat = 34
 
     /// The card's height for a block, known without laying anything out: the
-    /// window is what makes it a constant rather than a measurement.
-    static func height(steps: Int, hasFooter: Bool, isRunning: Bool) -> CGFloat {
-        let shown = min(steps, window)
+    /// window is what makes it a constant rather than a measurement, and an
+    /// expanded card trades that constant for the real step count.
+    static func height(steps: Int, hasFooter: Bool, isRunning: Bool, isExpanded: Bool) -> CGFloat {
+        let shown = isExpanded ? steps : min(steps, window)
         let rows = CGFloat(shown) * rowHeight + CGFloat(max(0, shown - 1)) * rowSpacing
         return headerHeight + padding * 2 + rows
             + (hasFooter ? footerHeight : 0)
@@ -68,6 +69,7 @@ final class ProgressCardView: MessageListRowView {
     private var stepViews: [ProgressStepView] = []
     private var block: ProgressBlock?
     private var steps: [ProgressStep] = []
+    private var isExpanded = false
 
     /// Called when the footer is tapped. The card does not own the expanded
     /// state: whoever holds the transcript decides what a tap means.
@@ -113,9 +115,10 @@ final class ProgressCardView: MessageListRowView {
 
     @objc private func handleExpand() { expandHandler?() }
 
-    func configure(block: ProgressBlock, steps: [ProgressStep]) {
+    func configure(block: ProgressBlock, steps: [ProgressStep], isExpanded: Bool) {
         self.block = block
         self.steps = steps
+        self.isExpanded = isExpanded
 
         // Sizes are the card's, family is the app's: the theme carries the
         // typeface and this decides how big each part of the card is in it.
@@ -150,11 +153,12 @@ final class ProgressCardView: MessageListRowView {
         sweepTrack.isHidden = block.state != .running
         if block.state == .running { startSweeping() }
 
-        let shown = Array(steps.suffix(Self.window))
+        let shown = isExpanded ? steps : Array(steps.suffix(Self.window))
         let hidden = max(0, block.stepCount - shown.count)
-        footer.isHidden = hidden == 0
+        footer.isHidden = hidden == 0 && !isExpanded
+        hiddenLabel.isHidden = isExpanded
         hiddenLabel.text = "+\(hidden)"
-        expandLabel.text = String.localized("Show all")
+        expandLabel.text = isExpanded ? String.localized("Show less") : String.localized("Show all")
         expandLabel.textColor = Self.accentColor
 
         // Reused rather than rebuilt: a block is rewritten many times a second
@@ -218,7 +222,7 @@ final class ProgressCardView: MessageListRowView {
             rowY += Self.rowHeight + Self.rowSpacing
         }
 
-        if footer.isHidden {
+        if footer.isHidden || isExpanded {
             gradientMask.frame = stepsContainer.bounds
             gradientMask.locations = [0, 0]
             stepsContainer.layer.mask = nil

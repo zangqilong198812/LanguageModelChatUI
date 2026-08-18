@@ -11,6 +11,20 @@ import Foundation
 /// re-deciding what each one is on every layout pass — a block is rewritten
 /// many times a second while a turn runs.
 public struct ProgressStep: Hashable, Sendable {
+    /// Equality ignores the step's text on purpose. A running block's text
+    /// grows on every redraw, and hashing it per frame is most of the diff
+    /// cost of a streaming turn; the card row is re-created when the owning
+    /// message's `contentVersion` changes, which is bumped on every rewrite.
+    /// The text still rides the value — the row reads it from the entry it
+    /// was configured with — it just does not take part in identity.
+    public static func == (lhs: ProgressStep, rhs: ProgressStep) -> Bool {
+        lhs.kind == rhs.kind && lhs.failed == rhs.failed
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(kind)
+        hasher.combine(failed)
+    }
     public enum Kind: Hashable, Sendable {
         case thinking
         case tool

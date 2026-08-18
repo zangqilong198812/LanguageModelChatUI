@@ -172,6 +172,16 @@ public final class ConversationSession: Identifiable, Sendable {
         messages.first { $0.id == messageID }
     }
 
+    /// The message that holds a given content part, if any.
+    ///
+    /// Tool-call rows carry the part's id, not the message's; toggling the
+    /// row's expansion has to find the message that owns it.
+    func message(containingPart partID: String) -> ConversationMessage? {
+        messages.first { message in
+            message.parts.contains { $0.id == partID }
+        }
+    }
+
     func removeMessage(with messageID: String) {
         messages.removeAll { $0.id == messageID }
     }
@@ -237,6 +247,9 @@ public final class ConversationSession: Identifiable, Sendable {
                         break
                     }
                 }
+                // The thinking tile draws the duration; the snapshot cache
+                // keys on the message's version, so the mutation must say so.
+                message.markContentChanged()
                 notifyMessagesDidChange(scrolling: false)
             }
         }

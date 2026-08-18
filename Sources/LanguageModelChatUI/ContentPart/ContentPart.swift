@@ -142,6 +142,11 @@ public struct ToolCallContentPart: Identifiable, Sendable {
     public var toolIcon: String?
     public var parameters: String
     public var state: ToolCallState
+    /// Whether the hint row is showing the full parameters rather than the
+    /// one-line chip. Carried on the part: the hint row only exists for
+    /// messages without a progress block, and those parts are never rebuilt
+    /// from frames.
+    public var isExpanded: Bool
 
     public init(
         id: String = UUID().uuidString,
@@ -149,7 +154,8 @@ public struct ToolCallContentPart: Identifiable, Sendable {
         apiName: String = "",
         toolIcon: String? = nil,
         parameters: String = "{}",
-        state: ToolCallState = .running
+        state: ToolCallState = .running,
+        isExpanded: Bool = false
     ) {
         self.id = id
         self.toolName = toolName
@@ -157,6 +163,7 @@ public struct ToolCallContentPart: Identifiable, Sendable {
         self.toolIcon = toolIcon
         self.parameters = parameters
         self.state = state
+        self.isExpanded = isExpanded
     }
 }
 

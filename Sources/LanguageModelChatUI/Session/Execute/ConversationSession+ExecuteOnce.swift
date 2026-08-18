@@ -45,6 +45,7 @@ extension ConversationSession {
                 if case var .reasoning(rp) = part {
                     rp.isCollapsed = true
                     message.parts[index] = .reasoning(rp)
+                    message.markContentChanged()
                     break
                 }
             }
@@ -259,6 +260,9 @@ extension ConversationSession {
             entry.hintMessage.parts.append(
                 .toolResult(.init(toolCallID: entry.request.id, result: response.text))
             )
+            // The hint row draws the tool call's state; the snapshot cache
+            // keys on the message's version, so the mutation must say so.
+            entry.hintMessage.markContentChanged()
             requestUpdate(view: messageListView)
 
             requestMessages.append(

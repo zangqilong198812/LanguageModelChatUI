@@ -118,13 +118,28 @@ extension MessageListView: ListViewAdapter {
                     .font: theme.fonts.body,
                 ])).height
                 return max(textHeight, ActivityReportingView.loadingSymbolSize.height + 16)
-            case .toolCallHint:
-                return theme.fonts.body.lineHeight + 20
-            case let .progressCard(_, block, steps):
+            case let .toolCallHint(_, toolCall):
+                let bodyLineHeight = theme.fonts.body.lineHeight
+                guard toolCall.isExpanded else {
+                    return ToolHintView.height(isExpanded: false, detailHeight: 0, bodyLineHeight: bodyLineHeight)
+                }
+                let detailHeight = boundingSize(
+                    with: containerWidth - 24,
+                    for: NSAttributedString(string: toolCall.parameters, attributes: [
+                        .font: theme.fonts.footnote,
+                    ])
+                ).height
+                return ToolHintView.height(
+                    isExpanded: true,
+                    detailHeight: ceil(detailHeight),
+                    bodyLineHeight: bodyLineHeight
+                )
+            case let .progressCard(_, block, steps, isExpanded, _):
                 return ProgressCardView.height(
                     steps: steps.count,
-                    hasFooter: block.stepCount > ProgressCardView.window,
-                    isRunning: block.state == .running
+                    hasFooter: block.stepCount > ProgressCardView.window || isExpanded,
+                    isRunning: block.state == .running,
+                    isExpanded: isExpanded
                 )
             case let .questionRecord(_, record):
                 return QuestionRecordView.height(for: record)
@@ -138,8 +153,14 @@ extension MessageListView: ListViewAdapter {
         guard let entry = entryForRow(at: index) else { return }
 
         if let card = rowView as? ProgressCardView {
-            if case let .progressCard(_, block, steps) = entry {
-                card.configure(block: block, steps: steps)
+            if case let .progressCard(id, block, steps, isExpanded, _) = entry {
+                card.configure(block: block, steps: steps, isExpanded: isExpanded)
+                card.expandHandler = { [weak self] in
+                    guard let self, let message = session?.message(for: id) else { return }
+                    message.isProgressExpanded.toggle()
+                    message.markContentChanged()
+                    session?.notifyMessagesDidChange(scrolling: false)
+                }
             }
             return
         }
@@ -151,6 +172,7 @@ extension MessageListView: ListViewAdapter {
                 questionView.expandHandler = { [weak self] in
                     guard let self, let message = session?.message(for: id) else { return }
                     message.question?.isExpanded.toggle()
+                    message.markContentChanged()
                     session?.notifyMessagesDidChange(scrolling: false)
                 }
             }
@@ -200,6 +222,9 @@ extension MessageListView: ListViewAdapter {
                             break
                         }
                     }
+                    // The row's revealed state drew from the part; the snapshot
+                    // cache keys on the message's version, so say so.
+                    conversationMessage.markContentChanged()
                     session?.notifyMessagesDidChange(scrolling: false)
                 }
             }
@@ -209,7 +234,20 @@ extension MessageListView: ListViewAdapter {
                 toolHintView.toolName = toolCall.toolName
                 toolHintView.text = toolCall.parameters
                 toolHintView.state = toolCall.state
-                toolHintView.clickHandler = nil
+                toolHintView.isExpanded = toolCall.isExpanded
+                toolHintView.clickHandler = { [weak self] in
+                    guard let self,
+                          let message = session?.message(containingPart: toolCall.id) else { return }
+                    for (index, part) in message.parts.enumerated() {
+                        if case var .toolCall(tc) = part, tc.id == toolCall.id {
+                            tc.isExpanded.toggle()
+                            message.parts[index] = .toolCall(tc)
+                            break
+                        }
+                    }
+                    message.markContentChanged()
+                    session?.notifyMessagesDidChange(scrolling: false)
+                }
             }
         }
     }

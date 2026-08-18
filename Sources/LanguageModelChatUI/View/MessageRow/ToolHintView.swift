@@ -6,7 +6,9 @@
 import UIKit
 
 final class ToolHintView: MessageListRowView {
-    var text: String?
+    var text: String? {
+        didSet { detailLabel.text = text }
+    }
 
     var toolName: String = .init()
 
@@ -17,7 +19,26 @@ final class ToolHintView: MessageListRowView {
         }
     }
 
+    /// Whether the chip is showing the full tool parameters below its one
+    /// line. The row height is the adapter's business; this only decides
+    /// whether the detail area is laid out.
+    var isExpanded: Bool = false {
+        didSet {
+            detailLabel.isHidden = !isExpanded
+            invalidateLayout()
+        }
+    }
+
     var clickHandler: (() -> Void)?
+
+    /// Height of a hint row, matching the chip's own layout: a one-line body,
+    /// plus the parameter detail area when expanded.
+    static func height(isExpanded: Bool, detailHeight: CGFloat, bodyLineHeight: CGFloat) -> CGFloat {
+        if isExpanded {
+            return 8 + bodyLineHeight + 8 + detailHeight + 8
+        }
+        return bodyLineHeight + 20
+    }
 
     private let backgroundGradientLayer = CAGradientLayer()
     private let label: ShimmerTextLabel = .init().with {
@@ -34,6 +55,12 @@ final class ToolHintView: MessageListRowView {
 
     private let symbolView: UIImageView = .init().with {
         $0.contentMode = .scaleAspectFit
+    }
+
+    private let detailLabel: UILabel = .init().with {
+        $0.numberOfLines = 0
+        $0.lineBreakMode = .byWordWrapping
+        $0.isHidden = true
     }
 
     private let decoratedView: UIImageView = .init(image: .init(named: "tools"))
@@ -55,6 +82,7 @@ final class ToolHintView: MessageListRowView {
         contentView.addSubview(decoratedView)
         contentView.addSubview(symbolView)
         contentView.addSubview(label)
+        contentView.addSubview(detailLabel)
 
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
         contentView.addGestureRecognizer(tapGesture)
@@ -66,22 +94,37 @@ final class ToolHintView: MessageListRowView {
         super.layoutSubviews()
 
         let labelSize = label.intrinsicContentSize
+        let symbolSize = labelSize.height // 1:1
+        let bodyY = isExpanded ? 8 : max(0, (contentView.bounds.height - symbolSize) / 2)
 
-        symbolView.frame = .init(
-            x: 12,
-            y: (contentView.bounds.height - labelSize.height) / 2,
-            width: labelSize.height, // 1:1
-            height: labelSize.height
-        )
-
+        symbolView.frame = .init(x: 12, y: bodyY, width: symbolSize, height: symbolSize)
         label.frame = .init(
             x: symbolView.frame.maxX + 8,
-            y: (contentView.bounds.height - labelSize.height) / 2,
+            y: bodyY,
             width: labelSize.width,
-            height: labelSize.height
+            height: symbolSize
         )
 
-        contentView.frame.size.width = label.frame.maxX + 18
+        if isExpanded {
+            let detailWidth = max(0, bounds.width - 24)
+            let detailHeight = detailLabel.sizeThatFits(
+                .init(width: detailWidth, height: .greatestFiniteMagnitude)
+            ).height
+            detailLabel.frame = .init(
+                x: 12,
+                y: symbolView.frame.maxY + 8,
+                width: detailWidth,
+                height: detailHeight
+            )
+            contentView.frame.size = .init(
+                width: max(label.frame.maxX + 18, detailWidth + 24),
+                height: detailLabel.frame.maxY + 8
+            )
+        } else {
+            detailLabel.frame = .zero
+            contentView.frame.size.width = label.frame.maxX + 18
+        }
+
         decoratedView.frame = .init(x: contentView.bounds.width - 12, y: -4, width: 16, height: 16)
         backgroundGradientLayer.frame = contentView.bounds
         backgroundGradientLayer.cornerRadius = contentView.layer.cornerRadius
@@ -90,6 +133,8 @@ final class ToolHintView: MessageListRowView {
     override func themeDidUpdate() {
         super.themeDidUpdate()
         label.font = theme.fonts.body
+        detailLabel.font = theme.fonts.footnote
+        detailLabel.textColor = .secondaryLabel
     }
 
     private func updateStateImage() {

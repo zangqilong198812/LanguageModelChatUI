@@ -14,6 +14,17 @@ public final class ConversationMessage: Identifiable, @unchecked Sendable {
     public var createdAt: Date
     public var metadata: [String: String]
 
+    /// Bumped whenever the message's displayable content changes in place.
+    ///
+    /// The list derives a row's identity from this rather than from hashing
+    /// the whole content text: a turn's block is rewritten many times a
+    /// second, and re-hashing every message's text on every rewrite is most
+    /// of the cost of a streaming turn. Any code that replaces `parts` or the
+    /// text a row draws must call `markContentChanged`, or the diff will not
+    /// notice and the row will go stale.
+    public private(set) var contentVersion: Int = 0
+
+
     /// Set when this message is a coding agent's working block rather than
     /// prose: a turn's steps, rewritten in place as it works.
     ///
@@ -22,6 +33,12 @@ public final class ConversationMessage: Identifiable, @unchecked Sendable {
     /// pushed off the screen by its own plumbing.
     public var progress: ProgressBlock?
 
+    /// Whether the working card is showing every step rather than its window.
+    ///
+    /// Carried on the message rather than the block: the block is rebuilt from
+    /// every frame, and a flag on it would be reset by the next redraw.
+    public var isProgressExpanded: Bool = false
+
     /// Set when this message records a question the agent asked and settled.
     ///
     /// While a question is open it is a bar the user acts on, not a row — the
@@ -29,6 +46,14 @@ public final class ConversationMessage: Identifiable, @unchecked Sendable {
     /// the receipt: one line of history, expandable to the options that were
     /// offered at the time.
     public var question: QuestionRecord?
+
+
+    /// Records that the content a row draws changed. The list keys its
+    /// snapshots on this, so a mutation that skips it is a row that never
+    /// repaints.
+    public func markContentChanged() {
+        contentVersion &+= 1
+    }
 
     public init(
         id: String = UUID().uuidString,
@@ -44,6 +69,7 @@ public final class ConversationMessage: Identifiable, @unchecked Sendable {
         self.parts = parts
         self.createdAt = createdAt
         self.metadata = metadata
+        self.isProgressExpanded = false
     }
 }
 
@@ -124,12 +150,15 @@ public extension ConversationMessage {
         set {
             for (index, part) in parts.enumerated() {
                 if case var .text(textPart) = part {
+                    guard textPart.text != newValue else { return }
                     textPart.text = newValue
                     parts[index] = .text(textPart)
+                    markContentChanged()
                     return
                 }
             }
             parts.insert(.text(TextContentPart(text: newValue)), at: 0)
+            markContentChanged()
         }
     }
 
@@ -157,13 +186,16 @@ public extension ConversationMessage {
         set {
             for (index, part) in parts.enumerated() {
                 if case var .reasoning(rp) = part {
+                    guard rp.text != (newValue ?? "") else { return }
                     rp.text = newValue ?? ""
                     parts[index] = .reasoning(rp)
+                    markContentChanged()
                     return
                 }
             }
             if let newValue, !newValue.isEmpty {
                 parts.append(.reasoning(ReasoningContentPart(text: newValue)))
+                markContentChanged()
             }
         }
     }

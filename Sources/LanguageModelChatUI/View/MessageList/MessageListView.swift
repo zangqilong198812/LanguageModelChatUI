@@ -176,6 +176,39 @@ public final class MessageListView: UIView {
         } else {
             listView.setContentOffset(.init(x: 0, y: listView.maximumContentOffset.y), animated: false)
         }
+        settleAtBottom()
+    }
+
+    /// One more pass after layout lands. A scroll target pinned in the same
+    /// runloop as a snapshot rides on the *old* content size — the send's echo
+    /// and the thinking row have not been measured yet — so the spring parked
+    /// one row short of the actual bottom.
+    private func settleAtBottom() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self, self.isAutoScrollingToBottom else { return }
+            let target = self.listView.maximumContentOffset
+            if abs(self.listView.contentOffset.y - target.y) > self.autoScrollTolerance {
+                self.listView.scroll(to: target)
+            }
+            self.reportBottomState()
+        }
+    }
+
+    /// Reports the reader leaving or returning to the bottom, for a host that
+    /// shows its own "jump to newest" affordance. Fired on scroll and after
+    /// content changes, deduplicated to transitions.
+    public var onBottomStateChange: ((Bool) -> Void)?
+    private var lastReportedBottom = true
+
+    /// Roomier than the auto-scroll tolerance on purpose: the affordance is
+    /// for a reader who left, not one a hairline off the edge.
+    private let bottomAffordanceTolerance: CGFloat = 80
+
+    private func reportBottomState() {
+        let near = isContentOffsetNearBottom(tolerance: bottomAffordanceTolerance)
+        guard near != lastReportedBottom else { return }
+        lastReportedBottom = near
+        onBottomStateChange?(near)
     }
 
     func updateList() {
@@ -183,8 +216,45 @@ public final class MessageListView: UIView {
         dataSource.applySnapshot(using: entries, animatingDifferences: false)
     }
 
+    /// Derived entries for the last message set, with the signature that
+    /// produced them.
+    ///
+    /// A host pokes the list for reasons that do not touch the transcript —
+    /// the thinking row's clock, a reload after a send — and re-deriving
+    /// every row of a long conversation for those is the waste this cache
+    /// removes. The signature is per-message content version plus footnote
+    /// (the footnote is the app's own delivery state, which never bumps a
+    /// version), so an in-place rewrite still rebuilds — exactly the rows
+    /// that must.
+    private var lastEntries: [Entry]?
+    private var lastSignature: [String: MessageSignature]?
+
+    private struct MessageSignature: Equatable {
+        let contentVersion: Int
+        let footnote: String?
+    }
+
+    private func signature(of messages: [ConversationMessage]) -> [String: MessageSignature] {
+        var result: [String: MessageSignature] = [:]
+        result.reserveCapacity(messages.count)
+        for message in messages {
+            result[message.id] = .init(
+                contentVersion: message.contentVersion,
+                footnote: message.metadata["footnote"]
+            )
+        }
+        return result
+    }
+
+    private func entriesIfUnchanged(_ messages: [ConversationMessage]) -> [Entry]? {
+        guard let lastEntries, let lastSignature else { return nil }
+        return signature(of: messages) == lastSignature ? lastEntries : nil
+    }
+
     func updateFromUpstreamPublisher(_ messages: [ConversationMessage], _ scrolling: Bool, isLoading: String?) {
-        var entries = entries(from: messages)
+        var entries = entriesIfUnchanged(messages) ?? entries(from: messages)
+        lastEntries = entries
+        lastSignature = signature(of: messages)
 
         for entry in entries {
             switch entry {
@@ -224,12 +294,21 @@ public final class MessageListView: UIView {
             dataSource.applySnapshot(using: entries, animatingDifferences: false)
             if shouldScrolling {
                 listView.scroll(to: listView.maximumContentOffset)
+                // The offset above was pinned against the pre-snapshot content
+                // size; the rows just applied land a frame later.
+                settleAtBottom()
+            } else {
+                reportBottomState()
             }
         }
     }
 }
 
 extension MessageListView: UIScrollViewDelegate {
+    public func scrollViewDidScroll(_: UIScrollView) {
+        reportBottomState()
+    }
+
     public func scrollViewWillBeginDragging(_: UIScrollView) {
         isAutoScrollingToBottom = false
     }
