@@ -48,6 +48,35 @@ final class ResponseView: MessageListRowView {
     private func configureSubviews() {
         contentView.addSubview(avatar)
         contentView.addSubview(markdownView)
+        // Links open in a sheet over the transcript by default; a host that
+        // wants different routing replaces `linkTapHandler` and this is gone.
+        markdownView.linkHandler = { [weak self] payload, _, _ in
+            self?.openLink(payload)
+        }
+    }
+
+    private func openLink(_ payload: LinkPayload) {
+        let url: URL? = switch payload {
+        case let .url(url): url
+        // A bare `example.com` in prose carries no scheme; browsing is the
+        // only thing a tap on it can mean.
+        case let .string(string): URL(string: string.contains("://") ? string : "https://" + string)
+        }
+        guard let url else { return }
+
+        if let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https" {
+            var responder: UIResponder? = self
+            while let next = responder?.next {
+                if let viewController = next as? UIViewController {
+                    viewController.present(LinkPreviewController.sheet(for: url), animated: true)
+                    return
+                }
+                responder = next
+            }
+        } else {
+            // mailto:, tel: and friends are not pages; the system owns them.
+            UIApplication.shared.open(url)
+        }
     }
 
     /// The mark stands beside the prose exactly as it stands beside a working
