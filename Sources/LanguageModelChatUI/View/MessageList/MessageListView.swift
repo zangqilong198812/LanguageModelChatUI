@@ -207,6 +207,11 @@ public final class MessageListView: UIView {
     public var onTopStateChange: ((Bool) -> Void)?
     private var lastReportedTop = false
     private let topAffordanceTolerance: CGFloat = 120
+    /// Top is only reportable once the reader has actually been at the
+    /// bottom: a freshly opened list sits at the top while its first page
+    /// lays out and scrolls down, and reporting that as "reached the top"
+    /// made hosts cascade-load the whole archive on open.
+    private var hasVisitedBottom = false
 
     /// Roomier than the auto-scroll tolerance on purpose: the affordance is
     /// for a reader who left, not one a hairline off the edge.
@@ -218,7 +223,8 @@ public final class MessageListView: UIView {
             lastReportedBottom = near
             onBottomStateChange?(near)
         }
-        let nearTop = listView.contentOffset.y <= topAffordanceTolerance
+        if near { hasVisitedBottom = true }
+        let nearTop = hasVisitedBottom && listView.contentOffset.y <= topAffordanceTolerance
         if nearTop != lastReportedTop {
             lastReportedTop = nearTop
             onTopStateChange?(nearTop)
