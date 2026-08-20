@@ -200,15 +200,29 @@ public final class MessageListView: UIView {
     public var onBottomStateChange: ((Bool) -> Void)?
     private var lastReportedBottom = true
 
+    /// Reports the reader reaching or leaving the top, for a host that loads
+    /// older history on approach. Deduplicated to transitions, so a prepend
+    /// that leaves the reader at the seam does not cascade into loading the
+    /// whole archive — the next page waits for the reader to move again.
+    public var onTopStateChange: ((Bool) -> Void)?
+    private var lastReportedTop = false
+    private let topAffordanceTolerance: CGFloat = 120
+
     /// Roomier than the auto-scroll tolerance on purpose: the affordance is
     /// for a reader who left, not one a hairline off the edge.
     private let bottomAffordanceTolerance: CGFloat = 80
 
     private func reportBottomState() {
         let near = isContentOffsetNearBottom(tolerance: bottomAffordanceTolerance)
-        guard near != lastReportedBottom else { return }
-        lastReportedBottom = near
-        onBottomStateChange?(near)
+        if near != lastReportedBottom {
+            lastReportedBottom = near
+            onBottomStateChange?(near)
+        }
+        let nearTop = listView.contentOffset.y <= topAffordanceTolerance
+        if nearTop != lastReportedTop {
+            lastReportedTop = nearTop
+            onTopStateChange?(nearTop)
+        }
     }
 
     func updateList() {
