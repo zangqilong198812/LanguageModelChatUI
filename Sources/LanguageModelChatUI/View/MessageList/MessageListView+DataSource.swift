@@ -80,6 +80,8 @@ extension MessageListView {
         case progressCard(String, ProgressBlock, [ProgressStep], Bool, Int)
         /// A question the agent asked and settled: one line of history.
         case questionRecord(String, QuestionRecord)
+        /// A localhost the message mentioned, derived from its prose.
+        case localPreview(String, LocalPreviewRecord)
 
         var id: String {
             switch self {
@@ -92,6 +94,7 @@ extension MessageListView {
             case let .activityReporting(msg): "activity-\(msg)"
             case let .progressCard(id, _, _, _, _): "progress-\(id)"
             case let .questionRecord(id, _): "question-\(id)"
+            case let .localPreview(id, record): "localpreview-\(id)-\(record.port)"
             }
         }
     }
@@ -240,6 +243,11 @@ extension MessageListView {
                 // Text content
                 if !textContent.isEmpty {
                     entries.append(.responseContent(message.id, representation))
+                    // A mentioned localhost grows a card under the prose —
+                    // derived here, at render time, so history gets it too.
+                    if let record = LocalPreviewRecord.detect(in: textContent) {
+                        entries.append(.localPreview(message.id, record))
+                    }
                 }
 
             case .system:

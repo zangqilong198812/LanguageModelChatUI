@@ -19,6 +19,7 @@ private extension MessageListView {
         case activityReporting
         case progressCard
         case questionRecord
+        case localPreview
     }
 }
 
@@ -39,6 +40,7 @@ extension MessageListView: ListViewAdapter {
         case .activityReporting: RowType.activityReporting
         case .progressCard: RowType.progressCard
         case .questionRecord: RowType.questionRecord
+        case .localPreview: RowType.localPreview
         }
     }
 
@@ -64,6 +66,8 @@ extension MessageListView: ListViewAdapter {
             ProgressCardView()
         case .questionRecord:
             QuestionRecordView()
+        case .localPreview:
+            LocalPreviewCardView()
         }
         view.theme = theme
         return view
@@ -143,6 +147,8 @@ extension MessageListView: ListViewAdapter {
                 )
             case let .questionRecord(_, record):
                 return QuestionRecordView.height(for: record)
+            case .localPreview:
+                return LocalPreviewCardView.cardHeight
             }
         }()
 
@@ -160,6 +166,17 @@ extension MessageListView: ListViewAdapter {
                     message.isProgressExpanded.toggle()
                     message.markContentChanged()
                     session?.notifyMessagesDidChange(scrolling: false)
+                }
+            }
+            return
+        }
+
+        if let previewCard = rowView as? LocalPreviewCardView {
+            if case let .localPreview(_, record) = entry {
+                previewCard.theme = theme
+                previewCard.configure(record, machineName: localPreviewMachineName)
+                previewCard.openHandler = { [weak self] in
+                    self?.onLocalPreviewOpen?(record)
                 }
             }
             return

@@ -194,6 +194,13 @@ public final class MessageListView: UIView {
         }
     }
 
+    /// A localhost card was tapped. The list only detects and draws the
+    /// mention; opening the tunnel is the host app's business.
+    public var onLocalPreviewOpen: ((LocalPreviewRecord) -> Void)?
+    /// What the localhost card calls the machine — "在 MacBook Pro 上". The
+    /// list knows messages, not machines, so the name is handed in.
+    public var localPreviewMachineName: String?
+
     /// Reports the reader leaving or returning to the bottom, for a host that
     /// shows its own "jump to newest" affordance. Fired on scroll and after
     /// content changes, deduplicated to transitions.
