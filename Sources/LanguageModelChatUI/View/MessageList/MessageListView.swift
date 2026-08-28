@@ -197,6 +197,12 @@ public final class MessageListView: UIView {
     /// A localhost card was tapped. The list only detects and draws the
     /// mention; opening the tunnel is the host app's business.
     public var onLocalPreviewOpen: ((LocalPreviewRecord) -> Void)?
+    /// A delivered file was tapped; opening, sharing and keeping are the
+    /// host app's to decide.
+    public var onDeliverableOpen: ((DeliverableItem) -> Void)?
+    /// Thumbnail bytes for a delivered image, if the host app has them yet.
+    /// Nil draws the quiet placeholder; refresh the row to fill it in.
+    public var deliverableThumbProvider: ((DeliverableItem) -> UIImage?)?
     /// What the localhost card calls the machine — "在 MacBook Pro 上". The
     /// list knows messages, not machines, so the name is handed in.
     public var localPreviewMachineName: String?

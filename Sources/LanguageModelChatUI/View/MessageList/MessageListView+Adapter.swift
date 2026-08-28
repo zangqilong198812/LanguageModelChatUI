@@ -20,6 +20,7 @@ private extension MessageListView {
         case progressCard
         case questionRecord
         case localPreview
+        case deliverable
     }
 }
 
@@ -41,6 +42,7 @@ extension MessageListView: ListViewAdapter {
         case .progressCard: RowType.progressCard
         case .questionRecord: RowType.questionRecord
         case .localPreview: RowType.localPreview
+        case .deliverable: RowType.deliverable
         }
     }
 
@@ -68,6 +70,8 @@ extension MessageListView: ListViewAdapter {
             QuestionRecordView()
         case .localPreview:
             LocalPreviewCardView()
+        case .deliverable:
+            DeliverableCardView()
         }
         view.theme = theme
         return view
@@ -149,6 +153,8 @@ extension MessageListView: ListViewAdapter {
                 return QuestionRecordView.height(for: record)
             case .localPreview:
                 return LocalPreviewCardView.cardHeight
+            case let .deliverable(_, items):
+                return DeliverableCardView.height(for: items)
             }
         }()
 
@@ -166,6 +172,18 @@ extension MessageListView: ListViewAdapter {
                     message.isProgressExpanded.toggle()
                     message.markContentChanged()
                     session?.notifyMessagesDidChange(scrolling: false)
+                }
+            }
+            return
+        }
+
+        if let deliverableRow = rowView as? DeliverableCardView {
+            if case let .deliverable(_, items) = entry {
+                deliverableRow.theme = theme
+                deliverableRow.thumbProvider = deliverableThumbProvider
+                deliverableRow.configure(items)
+                deliverableRow.openHandler = { [weak self] item in
+                    self?.onDeliverableOpen?(item)
                 }
             }
             return

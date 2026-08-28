@@ -82,6 +82,8 @@ extension MessageListView {
         case questionRecord(String, QuestionRecord)
         /// A localhost the message mentioned, derived from its prose.
         case localPreview(String, LocalPreviewRecord)
+        /// Files the agent handed the user — the deliver channel's cards.
+        case deliverable(String, [DeliverableItem])
 
         var id: String {
             switch self {
@@ -95,6 +97,7 @@ extension MessageListView {
             case let .progressCard(id, _, _, _, _): "progress-\(id)"
             case let .questionRecord(id, _): "question-\(id)"
             case let .localPreview(id, record): "localpreview-\(id)-\(record.port)"
+            case let .deliverable(id, _): "deliverable-\(id)"
             }
         }
     }
@@ -248,6 +251,12 @@ extension MessageListView {
                     if let record = LocalPreviewRecord.detect(in: textContent) {
                         entries.append(.localPreview(message.id, record))
                     }
+                }
+
+                // Delivered files: 说明是话,文件是东西 — the cards stand on
+                // their own row under whatever the agent said.
+                if !message.deliverables.isEmpty {
+                    entries.append(.deliverable(message.id, message.deliverables))
                 }
 
             case .system:

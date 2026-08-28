@@ -13,6 +13,10 @@ public final class ConversationMessage: Identifiable, @unchecked Sendable {
     public var parts: [ContentPart]
     public var createdAt: Date
     public var metadata: [String: String]
+    /// Files the assistant handed the user — the deliver channel. Rendered
+    /// as their own card row; bytes are resolved by the host app, the list
+    /// only names them.
+    public var deliverables: [DeliverableItem] = []
 
     /// Bumped whenever the message's displayable content changes in place.
     ///
@@ -199,4 +203,22 @@ public extension ConversationMessage {
             }
         }
     }
+}
+
+/// One delivered file, as the conversation names it. `id` doubles as the
+/// host app's storage key.
+public struct DeliverableItem: Hashable, Sendable, Identifiable {
+    public let id: String
+    public let name: String
+    public let mediaType: String
+    public let size: Int64
+
+    public init(id: String, name: String, mediaType: String, size: Int64) {
+        self.id = id
+        self.name = name
+        self.mediaType = mediaType
+        self.size = size
+    }
+
+    public var isImage: Bool { mediaType.hasPrefix("image/") }
 }
