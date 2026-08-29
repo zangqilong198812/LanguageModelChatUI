@@ -203,6 +203,16 @@ public final class MessageListView: UIView {
     /// Thumbnail bytes for a delivered image, if the host app has them yet.
     /// Nil draws the quiet placeholder; refresh the row to fill it in.
     public var deliverableThumbProvider: ((DeliverableItem) -> UIImage?)?
+
+    /// 30-2's gate: whether an assistant message gets copy/export keys.
+    /// Nil (the default) draws none — hosts opt in and decide "done being
+    /// written" themselves, since only they know the turn's state.
+    public var messageActionsProvider: ((String) -> Bool)?
+    /// Copy tapped on a message; the row shows its own "copied" moment, the
+    /// host owns the pasteboard.
+    public var onMessageCopy: ((String) -> Void)?
+    /// Export tapped on a message — the host opens its export sheet.
+    public var onMessageExport: ((String) -> Void)?
     /// What the localhost card calls the machine — "在 MacBook Pro 上". The
     /// list knows messages, not machines, so the name is handed in.
     public var localPreviewMachineName: String?

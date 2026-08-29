@@ -21,6 +21,7 @@ private extension MessageListView {
         case questionRecord
         case localPreview
         case deliverable
+        case messageActions
     }
 }
 
@@ -43,6 +44,7 @@ extension MessageListView: ListViewAdapter {
         case .questionRecord: RowType.questionRecord
         case .localPreview: RowType.localPreview
         case .deliverable: RowType.deliverable
+        case .messageActions: RowType.messageActions
         }
     }
 
@@ -72,6 +74,8 @@ extension MessageListView: ListViewAdapter {
             LocalPreviewCardView()
         case .deliverable:
             DeliverableCardView()
+        case .messageActions:
+            MessageActionsView()
         }
         view.theme = theme
         return view
@@ -155,6 +159,8 @@ extension MessageListView: ListViewAdapter {
                 return LocalPreviewCardView.cardHeight
             case let .deliverable(_, items):
                 return DeliverableCardView.height(for: items)
+            case .messageActions:
+                return MessageActionsView.rowHeight
             }
         }()
 
@@ -184,6 +190,20 @@ extension MessageListView: ListViewAdapter {
                 deliverableRow.configure(items)
                 deliverableRow.openHandler = { [weak self] item in
                     self?.onDeliverableOpen?(item)
+                }
+            }
+            return
+        }
+
+        if let actionsRow = rowView as? MessageActionsView {
+            if case let .messageActions(id) = entry {
+                actionsRow.theme = theme
+                actionsRow.reset()
+                actionsRow.copyHandler = { [weak self] in
+                    self?.onMessageCopy?(id)
+                }
+                actionsRow.exportHandler = { [weak self] in
+                    self?.onMessageExport?(id)
                 }
             }
             return
