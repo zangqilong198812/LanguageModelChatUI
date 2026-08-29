@@ -24,6 +24,12 @@ final class DeliverableCardView: MessageListRowView {
     static let fileCardHeight: CGFloat = 56
     static let rowGap: CGFloat = 8
 
+    /// A thumb keeps the picture's own shape: height fixed at thumbSide,
+    /// width from the aspect ratio — clamped so a panorama or a tall phone
+    /// shot still reads as a card instead of a ribbon.
+    private static let thumbMinWidth: CGFloat = 54
+    private static let thumbMaxWidth: CGFloat = 170
+
     /// The whole group's height, computed the same way layoutSubviews will
     /// place it — the list asks before the row exists.
     static func height(for items: [DeliverableItem]) -> CGFloat {
@@ -145,6 +151,13 @@ final class DeliverableCardView: MessageListRowView {
         return card
     }
 
+    /// Square while the bytes are still in flight — the placeholder has no
+    /// shape to borrow; the provider refresh re-lays the row with the real one.
+    private static func thumbWidth(for image: UIImage?) -> CGFloat {
+        guard let size = image?.size, size.height > 0 else { return thumbSide }
+        return min(max(thumbSide * size.width / size.height, thumbMinWidth), thumbMaxWidth)
+    }
+
     private func symbolFor(_ mediaType: String) -> String {
         if mediaType.hasPrefix("video/") { return "play.rectangle.fill" }
         if mediaType.hasPrefix("audio/") { return "waveform" }
@@ -172,9 +185,10 @@ final class DeliverableCardView: MessageListRowView {
                 // Side by side until the row runs out; the overflow clips,
                 // which for the two-or-three images a turn sends is never
                 // reached.
-                if thumbX + Self.thumbSide > width { continue }
-                view.frame = CGRect(x: thumbX, y: y, width: Self.thumbSide, height: Self.thumbSide)
-                thumbX += Self.thumbSide + Self.rowGap
+                let thumbWidth = Self.thumbWidth(for: (view as? UIImageView)?.image)
+                if thumbX + thumbWidth > width { continue }
+                view.frame = CGRect(x: thumbX, y: y, width: thumbWidth, height: Self.thumbSide)
+                thumbX += thumbWidth + Self.rowGap
                 placedThumb = true
             } else {
                 if placedThumb {

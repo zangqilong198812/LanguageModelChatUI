@@ -84,9 +84,6 @@ extension MessageListView {
         case localPreview(String, LocalPreviewRecord)
         /// Files the agent handed the user — the deliver channel's cards.
         case deliverable(String, [DeliverableItem])
-        /// 30-2: copy and export, under a finished assistant message only —
-        /// gated by the host's `messageActionsProvider`.
-        case messageActions(String)
 
         var id: String {
             switch self {
@@ -101,7 +98,6 @@ extension MessageListView {
             case let .questionRecord(id, _): "question-\(id)"
             case let .localPreview(id, record): "localpreview-\(id)-\(record.port)"
             case let .deliverable(id, _): "deliverable-\(id)"
-            case let .messageActions(id): "actions-\(id)"
             }
         }
     }
@@ -261,12 +257,6 @@ extension MessageListView {
                 // their own row under whatever the agent said.
                 if !message.deliverables.isEmpty {
                     entries.append(.deliverable(message.id, message.deliverables))
-                }
-
-                // The two quiet keys, only once the message has words and the
-                // host says it is done being written.
-                if !textContent.isEmpty, messageActionsProvider?(message.id) == true {
-                    entries.append(.messageActions(message.id))
                 }
 
             case .system:

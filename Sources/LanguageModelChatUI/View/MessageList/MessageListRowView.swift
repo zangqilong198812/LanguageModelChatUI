@@ -73,6 +73,17 @@ class MessageListRowView: ListRowView, UIContextMenuInteractionDelegate {
         _: UIContextMenuInteraction,
         configurationForMenuAtLocation location: CGPoint
     ) -> UIContextMenuConfiguration? {
+        // A long-press on selected text belongs to the text's own edit menu —
+        // Litext shows it for presses inside the selection — so the row menu
+        // stands down instead of racing it.
+        var queue = contentView.subviews
+        while let v = queue.first {
+            queue.removeFirst()
+            queue.append(contentsOf: v.subviews)
+            if let label = v as? LTXLabel, (label.selectionRange?.length ?? 0) > 0 {
+                return nil
+            }
+        }
         guard let menu = contextMenuProvider?(location) else { return nil }
         return .init {
             guard let snapshot = self.contentView.snapshotView(afterScreenUpdates: false) else {

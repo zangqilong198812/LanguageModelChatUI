@@ -21,7 +21,6 @@ private extension MessageListView {
         case questionRecord
         case localPreview
         case deliverable
-        case messageActions
     }
 }
 
@@ -44,7 +43,6 @@ extension MessageListView: ListViewAdapter {
         case .questionRecord: RowType.questionRecord
         case .localPreview: RowType.localPreview
         case .deliverable: RowType.deliverable
-        case .messageActions: RowType.messageActions
         }
     }
 
@@ -74,8 +72,6 @@ extension MessageListView: ListViewAdapter {
             LocalPreviewCardView()
         case .deliverable:
             DeliverableCardView()
-        case .messageActions:
-            MessageActionsView()
         }
         view.theme = theme
         return view
@@ -159,8 +155,6 @@ extension MessageListView: ListViewAdapter {
                 return LocalPreviewCardView.cardHeight
             case let .deliverable(_, items):
                 return DeliverableCardView.height(for: items)
-            case .messageActions:
-                return MessageActionsView.rowHeight
             }
         }()
 
@@ -190,20 +184,6 @@ extension MessageListView: ListViewAdapter {
                 deliverableRow.configure(items)
                 deliverableRow.openHandler = { [weak self] item in
                     self?.onDeliverableOpen?(item)
-                }
-            }
-            return
-        }
-
-        if let actionsRow = rowView as? MessageActionsView {
-            if case let .messageActions(id) = entry {
-                actionsRow.theme = theme
-                actionsRow.reset()
-                actionsRow.copyHandler = { [weak self] in
-                    self?.onMessageCopy?(id)
-                }
-                actionsRow.exportHandler = { [weak self] in
-                    self?.onMessageExport?(id)
                 }
             }
             return
@@ -246,10 +226,26 @@ extension MessageListView: ListViewAdapter {
                 userAttachmentView.update(with: attachments)
             }
         } else if let responseView = rowView as? ResponseView {
-            if case let .responseContent(_, message) = entry {
+            if case let .responseContent(id, message) = entry {
                 responseView.theme = theme
                 let package = markdownPackageCache.package(for: message, theme: theme)
                 responseView.markdownView.setMarkdown(package)
+                // Copy and export live in the long-press menu. The gate is
+                // asked at press time, not configure time, so a message that
+                // finishes streaming grows its menu without a reconfigure.
+                responseView.contextMenuProvider = { [weak self] _ in
+                    guard let self, messageActionsProvider?(id) == true else { return nil }
+                    return UIMenu(children: [
+                        UIAction(
+                            title: String.localized("Copy"),
+                            image: UIImage(systemName: "doc.on.doc")
+                        ) { [weak self] _ in self?.onMessageCopy?(id) },
+                        UIAction(
+                            title: String.localized("Export as Image"),
+                            image: UIImage(systemName: "photo")
+                        ) { [weak self] _ in self?.onMessageExport?(id) },
+                    ])
+                }
             }
         } else if let hintMessageView = rowView as? HintMessageView {
             if case let .hint(_, content) = entry {
