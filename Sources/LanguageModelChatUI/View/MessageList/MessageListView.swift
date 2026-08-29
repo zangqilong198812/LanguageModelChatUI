@@ -215,6 +215,9 @@ public final class MessageListView: UIView {
     /// Export chosen from a message's long-press menu — the host opens its
     /// export sheet.
     public var onMessageExport: ((String) -> Void)?
+    /// Add-to-memory chosen from a message's long-press menu — the host owns
+    /// what a memory is; nil hides the item from the menu.
+    public var onMessageMemorize: ((String) -> Void)?
     /// What the localhost card calls the machine — "在 MacBook Pro 上". The
     /// list knows messages, not machines, so the name is handed in.
     public var localPreviewMachineName: String?

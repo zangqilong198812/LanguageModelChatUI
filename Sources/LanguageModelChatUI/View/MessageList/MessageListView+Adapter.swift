@@ -235,7 +235,7 @@ extension MessageListView: ListViewAdapter {
                 // finishes streaming grows its menu without a reconfigure.
                 responseView.contextMenuProvider = { [weak self] _ in
                     guard let self, messageActionsProvider?(id) == true else { return nil }
-                    return UIMenu(children: [
+                    var actions = [
                         UIAction(
                             title: String.localized("Copy"),
                             image: UIImage(systemName: "doc.on.doc")
@@ -244,7 +244,15 @@ extension MessageListView: ListViewAdapter {
                             title: String.localized("Export as Image"),
                             image: UIImage(systemName: "photo")
                         ) { [weak self] _ in self?.onMessageExport?(id) },
-                    ])
+                    ]
+                    // Only hosts that know what a memory is offer one.
+                    if onMessageMemorize != nil {
+                        actions.append(UIAction(
+                            title: String.localized("Add to Memory"),
+                            image: UIImage(systemName: "folder")
+                        ) { [weak self] _ in self?.onMessageMemorize?(id) })
+                    }
+                    return UIMenu(children: actions)
                 }
             }
         } else if let hintMessageView = rowView as? HintMessageView {
