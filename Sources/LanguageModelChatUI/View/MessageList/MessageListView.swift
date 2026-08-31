@@ -158,6 +158,32 @@ public final class MessageListView: UIView {
         loadingState.send(message)
     }
 
+    /// The same wait, wearing the shape of the work: an SF Symbol name drawn
+    /// ahead of the words. Hosts that have nothing to draw keep calling
+    /// `loading(with:)` and get the row exactly as it was.
+    public func loading(with message: String, symbol: String?) {
+        guard let symbol, !symbol.isEmpty else {
+            loadingState.send(message)
+            return
+        }
+        loadingState.send(Self.packSymbol(symbol, into: message))
+    }
+
+    /// The symbol rides inside the string so the whole pipeline — the entry
+    /// enum, its identity, its height — keeps working untouched. The unit
+    /// separator never appears in a sentence, and readers of the old shape
+    /// see a plain message.
+    static let symbolSeparator = "\u{001F}"
+
+    static func packSymbol(_ symbol: String, into message: String) -> String {
+        symbol + symbolSeparator + message
+    }
+
+    static func unpackSymbol(_ raw: String) -> (symbol: String?, message: String) {
+        guard let range = raw.range(of: symbolSeparator) else { return (nil, raw) }
+        return (String(raw[raw.startIndex ..< range.lowerBound]), String(raw[range.upperBound...]))
+    }
+
     public func stopLoading() {
         loadingState.send(nil)
     }

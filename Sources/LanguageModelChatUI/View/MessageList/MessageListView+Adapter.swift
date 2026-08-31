@@ -122,7 +122,8 @@ extension MessageListView: ListViewAdapter {
             case .hint:
                 return ceil(theme.fonts.footnote.lineHeight + 16)
             case let .activityReporting(content):
-                let textHeight = boundingSize(with: .greatestFiniteMagnitude, for: NSAttributedString(string: content, attributes: [
+                let words = MessageListView.unpackSymbol(content).message
+                let textHeight = boundingSize(with: .greatestFiniteMagnitude, for: NSAttributedString(string: words, attributes: [
                     .font: theme.fonts.body,
                 ])).height
                 return max(textHeight, ActivityReportingView.loadingSymbolSize.height + 16)
@@ -262,8 +263,10 @@ extension MessageListView: ListViewAdapter {
             }
         } else if let activityReportingView = rowView as? ActivityReportingView {
             if case let .activityReporting(content) = entry {
+                let unpacked = MessageListView.unpackSymbol(content)
                 activityReportingView.theme = theme
-                activityReportingView.text = content
+                activityReportingView.symbolName = unpacked.symbol
+                activityReportingView.text = unpacked.message
             }
         } else if let reasoningContentView = rowView as? ReasoningContentView {
             if case let .reasoningContent(_, message) = entry {

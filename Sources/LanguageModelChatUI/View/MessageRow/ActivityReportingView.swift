@@ -7,6 +7,21 @@ import GlyphixTextFx
 import UIKit
 
 final class ActivityReportingLabel: UIView {
+    /// An SF Symbol drawn ahead of the words — the shape of the work, read
+    /// before the sentence is. Nil leaves the row as it always was.
+    var symbolName: String? {
+        didSet {
+            guard symbolName != oldValue else { return }
+            symbolView.image = symbolName.flatMap {
+                UIImage(systemName: $0, withConfiguration: UIImage.SymbolConfiguration(
+                    pointSize: 12, weight: .medium
+                ))
+            }
+            symbolView.isHidden = symbolView.image == nil
+            setNeedsLayout()
+        }
+    }
+
     var text: String? {
         set {
             textLabel.text = newValue ?? .init()
@@ -24,12 +39,20 @@ final class ActivityReportingLabel: UIView {
     }
 
     private let loadingSymbol: LoadingSymbol = .init()
+    private let symbolView: UIImageView = .init()
 
     static let loadingSymbolSize: CGSize = .init(width: 30, height: 10)
+    /// The symbol's slot, including the gap before the words.
+    static let symbolWidth: CGFloat = 20
     static let font: UIFont = .systemFont(ofSize: 15)
 
     override init(frame: CGRect) {
         super.init(frame: frame)
+
+        symbolView.contentMode = .scaleAspectFit
+        symbolView.tintColor = .secondaryLabel
+        symbolView.isHidden = true
+        addSubview(symbolView)
 
         textLabel.textColor = .label
         textLabel.textAlignment = .leading
@@ -45,9 +68,18 @@ final class ActivityReportingLabel: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
 
+        let symbolInset: CGFloat = symbolView.isHidden ? 0 : Self.symbolWidth
+        if !symbolView.isHidden {
+            symbolView.frame = CGRect(
+                x: 0,
+                y: (bounds.height - 15) / 2,
+                width: 15,
+                height: 15
+            )
+        }
         let textSize = textLabel.intrinsicContentSize
         textLabel.frame = CGRect(
-            x: 0,
+            x: symbolInset,
             y: 0,
             width: textSize.width,
             height: bounds.height
@@ -73,6 +105,11 @@ final class ActivityReportingView: MessageListRowView {
         get { reportingLabel.text }
     }
 
+    var symbolName: String? {
+        set { reportingLabel.symbolName = newValue }
+        get { reportingLabel.symbolName }
+    }
+
     private let reportingLabel: ActivityReportingLabel = .init()
 
     static let loadingSymbolSize: CGSize = ActivityReportingLabel.loadingSymbolSize
@@ -91,7 +128,8 @@ final class ActivityReportingView: MessageListRowView {
         reportingLabel.frame = CGRect(
             x: 0,
             y: 0,
-            width: labelSize.width + Self.loadingSymbolSize.width,
+            width: labelSize.width + Self.loadingSymbolSize.width
+                + (reportingLabel.symbolName == nil ? 0 : ActivityReportingLabel.symbolWidth),
             height: contentView.bounds.height
         )
     }
