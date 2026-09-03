@@ -230,7 +230,20 @@ extension MessageListView: ListViewAdapter {
             if case let .responseContent(id, message) = entry {
                 responseView.theme = theme
                 let package = markdownPackageCache.package(for: message, theme: theme)
-                responseView.markdownView.setMarkdown(package)
+                // Manually, which means synchronously and without the
+                // throttle. The height for this row was just measured from
+                // this very document; `setMarkdown` would instead hand it to
+                // a 20fps pipeline and let it land a frame or two later —
+                // after the row had already been given a height measured
+                // from something else. Rows do not clip (a tool tip has to
+                // be able to reach outside one), so a document that arrives
+                // taller than its row does not get cut off: it draws straight
+                // over the message below it.
+                //
+                // setMarkdownManually also cancels whatever the pipeline was
+                // still holding, which is what stops a stale document from
+                // landing on top of this one later.
+                responseView.markdownView.setMarkdownManually(package)
                 // Copy and export live in the long-press menu. The gate is
                 // asked at press time, not configure time, so a message that
                 // finishes streaming grows its menu without a reconfigure.
