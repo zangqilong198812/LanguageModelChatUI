@@ -35,10 +35,10 @@ public struct ProgressStep: Hashable, Sendable {
         /// in the right row instead of reflowing the block.
         public var label: String {
             switch self {
-            case .thinking: String.localized("Thinking")
-            case .tool: String.localized("Tool")
-            case .result: String.localized("Result")
-            case .note: String.localized("Note")
+            case .thinking: ChatModelStrings.localized("Thinking")
+            case .tool: ChatModelStrings.localized("Tool")
+            case .result: ChatModelStrings.localized("Result")
+            case .note: ChatModelStrings.localized("Note")
             }
         }
     }
